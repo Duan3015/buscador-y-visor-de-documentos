@@ -1,0 +1,35 @@
+--- Lexemas segun tratamiento de acentos ---
+psql:/tmp/s.sql:1: NOTICE:  extension "unaccent" already exists, skipping
+ 
+    palabra    |   solo_spanish    | unaccent_y_spanish 
+---------------+-------------------+--------------------
+ instalaci├│n   | 'instal':1        | 'instalacion':1
+ instalacion   | 'instalacion':1   | 'instalacion':1
+ instalar      | 'instal':1        | 'instal':1
+ instalaciones | 'instal':1        | 'instal':1
+ configuraci├│n | 'configur':1      | 'configuracion':1
+ configuracion | 'configuracion':1 | 'configuracion':1
+ configurar    | 'configur':1      | 'configur':1
+ descripci├│n   | 'descripcion':1   | 'descripcion':1
+ descripcion   | 'descripcion':1   | 'descripcion':1
+ documentaci├│n | 'document':1      | 'documentacion':1
+ documentacion | 'documentacion':1 | 'documentacion':1
+ arquitectura  | 'arquitectur':1   | 'arquitectur':1
+ indexaci├│n    | 'index':1         | 'indexacion':1
+ indexacion    | 'indexacion':1    | 'indexacion':1
+(14 rows)
+
+--- Coincidencias cruzadas: texto con acento contra consulta con y sin acento ---
+            texto            |   consulta    | solo_spanish | unaccent_y_spanish 
+-----------------------------+---------------+--------------+--------------------
+ La instalaci├│n del servicio | instalaci├│n   | t            | t
+ La instalaci├│n del servicio | instalacion   | f            | t
+ La instalaci├│n del servicio | instalar      | t            | f
+ La instalacion del servicio | instalaci├│n   | f            | t
+ La instalacion del servicio | instalar      | f            | f
+ Gu├¡a de configuraci├│n       | configuracion | f            | t
+ Gu├¡a de configuraci├│n       | configurar    | t            | f
+ Guia de configuracion       | configuraci├│n | f            | t
+(8 rows)
+
+

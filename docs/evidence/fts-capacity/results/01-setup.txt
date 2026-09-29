@@ -1,0 +1,7 @@
+psql:/tmp/01-setup.sql:6: NOTICE:  table "books" does not exist, skipping
+psql:/tmp/01-setup.sql:16: NOTICE:  table "corpus" does not exist, skipping
+ corpus_chars 
+--------------
+      6816083
+(1 row)
+

@@ -1,0 +1,15 @@
+          consulta          |       ids_y_rank       
+----------------------------+------------------------
+ instalar                   | 1:1.00  3:0.20  2:0.10
+ instalacion                | 1:1.00  2:0.10
+ instalaci├│n                | 1:2.00  2:0.20  3:0.20
+ configurar                 | 2:0.30
+ configuraci├│n              | 3:0.80  2:0.40
+ perez                      | 1:0.80  3:0.80
+ P├®rez                      | 1:0.80  3:0.80
+ "instalaci├│n del servicio" | 2:0.10
+ "instalacion del servicio" | 2:0.05
+ servicio -manual           | 
+(10 rows)
+
+

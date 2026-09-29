@@ -1,0 +1,30 @@
+ docs | chars_min | chars_max | texto_total | gin_index | vector_promedio 
+------+-----------+-----------+-------------+-----------+-----------------
+  900 |    500000 |    500000 | 440 MB      | 11 MB     | 97 kB
+(1 row)
+
+ consulta | coincidentes | rank_p50_ms | rank_p95_ms | rank_max_ms | full_p50_ms | full_p95_ms | full_max_ms 
+----------+--------------+-------------+-------------+-------------+-------------+-------------+-------------
+ Dulcinea |          360 |       100.8 |       129.9 |       132.9 |       655.6 |       768.7 |       789.1
+(1 row)
+
+     consulta      | coincidentes | rank_p50_ms | rank_p95_ms | rank_max_ms | full_p50_ms | full_p95_ms | full_max_ms 
+-------------------+--------------+-------------+-------------+-------------+-------------+-------------+-------------
+ molinos de viento |          776 |       151.6 |       241.4 |       245.1 |       776.3 |      1211.5 |      1349.2
+(1 row)
+
+     consulta     | coincidentes | rank_p50_ms | rank_p95_ms | rank_max_ms | full_p50_ms | full_p95_ms | full_max_ms 
+------------------+--------------+-------------+-------------+-------------+-------------+-------------+-------------
+ caballero armado |          760 |       144.2 |       190.8 |       218.1 |       700.4 |       820.3 |       866.0
+(1 row)
+
+    consulta    | coincidentes | rank_p50_ms | rank_p95_ms | rank_max_ms | full_p50_ms | full_p95_ms | full_max_ms 
+----------------+--------------+-------------+-------------+-------------+-------------+-------------+-------------
+ vuestra merced |          839 |       155.6 |       381.8 |       491.5 |       832.2 |      1700.4 |      1816.5
+(1 row)
+
+     consulta     | coincidentes | rank_p50_ms | rank_p95_ms | rank_max_ms | full_p50_ms | full_p95_ms | full_max_ms 
+------------------+--------------+-------------+-------------+-------------+-------------+-------------+-------------
+ "vuestra merced" |          839 |       148.9 |       238.3 |       245.1 |       717.1 |      1041.4 |      1055.7
+(1 row)
+

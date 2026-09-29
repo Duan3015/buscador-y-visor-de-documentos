@@ -1,0 +1,63 @@
+=== Densidad del texto (caracteres por palabra, bytes por caracter) ===
+     title      |  chars  |  bytes  | bytes_por_char | palabras | chars_por_palabra 
+----------------+---------+---------+----------------+----------+-------------------
+ Niebla         |  319683 |  334499 |          1.046 |    56976 |              5.61
+ Divina Comedia |  692512 |  707180 |          1.021 |   121126 |              5.72
+ Jinetes        |  801687 |  822834 |          1.026 |   130977 |              6.12
+ Viajes         | 1105240 | 1122606 |          1.016 |   180702 |              6.12
+ Regenta        | 1786214 | 1835403 |          1.028 |   306471 |              5.83
+ Quijote        | 2110737 | 2168320 |          1.027 |   386616 |              5.46
+(6 rows)
+
+=== Tamano del tsvector segun caracteres (texto natural, config spanish) ===
+ chars  | lexemas | vec_bytes | tiempo_ms | resultado 
+--------+---------+-----------+-----------+-----------
+ 100000 |    2386 |     45594 |      17.5 | OK
+(1 row)
+
+ chars  | lexemas | vec_bytes | tiempo_ms | resultado 
+--------+---------+-----------+-----------+-----------
+ 500000 |    5140 |     88616 |      55.3 | OK
+(1 row)
+
+  chars  | lexemas | vec_bytes | tiempo_ms | resultado 
+---------+---------+-----------+-----------+-----------
+ 1000000 |    6807 |    114056 |     107.9 | OK
+(1 row)
+
+  chars  | lexemas | vec_bytes | tiempo_ms | resultado 
+---------+---------+-----------+-----------+-----------
+ 2000000 |    9863 |    160802 |     241.3 | OK
+(1 row)
+
+  chars  | lexemas | vec_bytes | tiempo_ms | resultado 
+---------+---------+-----------+-----------+-----------
+ 4000000 |   17641 |    280794 |     593.0 | OK
+(1 row)
+
+  chars  | lexemas | vec_bytes | tiempo_ms | resultado 
+---------+---------+-----------+-----------+-----------
+ 6500000 |   21683 |    343712 |     754.6 | OK
+(1 row)
+
+=== Peor caso: tokens unicos de 32 caracteres (hashes) ===
+ tokens | chars  | vec_bytes | resultado 
+--------+--------+-----------+-----------
+  10000 | 329999 |    405626 | OK
+(1 row)
+
+ tokens | chars  | vec_bytes | resultado 
+--------+--------+-----------+-----------
+  20000 | 659999 |    810728 | OK
+(1 row)
+
+ tokens | chars  | vec_bytes | resultado 
+--------+--------+-----------+-----------
+  25000 | 824999 |   1013376 | OK
+(1 row)
+
+ tokens | chars  | vec_bytes |                                 resultado                                 
+--------+--------+-----------+---------------------------------------------------------------------------
+  30000 | 989999 |           | ERROR: string is too long for tsvector (1088564 bytes, max 1048575 bytes)
+(1 row)
+

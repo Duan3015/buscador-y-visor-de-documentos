@@ -1,0 +1,63 @@
+=== Caracter y pagina aproximados donde se alcanza la palabra 16383 ===
+ chars_aprox_palabra_16383 | paginas_aprox_2600_chars_por_pagina 
+---------------------------+-------------------------------------
+                     89443 |                                34.4
+(1 row)
+
+=== Frase de dos palabras adyacentes tomada en un desplazamiento: vector completo frente a ventana ===
+ offset_chars |      frase       | en_vector_completo | en_ventana_20k 
+--------------+------------------+--------------------+----------------
+        20000 | quisiera d├írtela | t                  | t
+(1 row)
+
+ offset_chars |      frase      | en_vector_completo | en_ventana_20k 
+--------------+-----------------+--------------------+----------------
+        60000 | Castilla llaman | t                  | t
+(1 row)
+
+ offset_chars |      frase      | en_vector_completo | en_ventana_20k 
+--------------+-----------------+--------------------+----------------
+        90000 | labrador estaba | t                  | t
+(1 row)
+
+ offset_chars |     frase     | en_vector_completo | en_ventana_20k 
+--------------+---------------+--------------------+----------------
+       500000 | pensar buscar | f                  | t
+(1 row)
+
+ offset_chars |     frase     | en_vector_completo | en_ventana_20k 
+--------------+---------------+--------------------+----------------
+      1000000 | mismas partes | f                  | t
+(1 row)
+
+=== Costo de ts_headline y ts_rank_cd segun tamano del texto ===
+ chars | headline_ms | rank_ms 
+-------+-------------+---------
+  3000 |        0.43 |    0.05
+(1 row)
+
+ chars  | headline_ms | rank_ms 
+--------+-------------+---------
+ 100000 |       10.88 |    0.04
+(1 row)
+
+ chars  | headline_ms | rank_ms 
+--------+-------------+---------
+ 300000 |       30.99 |    0.05
+(1 row)
+
+ chars  | headline_ms | rank_ms 
+--------+-------------+---------
+ 500000 |       55.96 |    0.05
+(1 row)
+
+  chars  | headline_ms | rank_ms 
+---------+-------------+---------
+ 1000000 |      104.24 |    0.05
+(1 row)
+
+  chars  | headline_ms | rank_ms 
+---------+-------------+---------
+ 2000000 |      206.61 |    0.05
+(1 row)
+

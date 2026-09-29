@@ -1,0 +1,20 @@
+psql:/tmp/c.sql:16: NOTICE:  extension "unaccent" already exists, skipping
+ 
+          consulta          | A spanish+unaccent | B simple+unaccent | C spanish | D doble 
+----------------------------+--------------------+-------------------+-----------+---------
+ instalaci├│n                | 1,6                | 1,6               | 1,2,3     | 1,2,3,6
+ instalacion                | 1,6                | 1,6               | 6         | 1,6
+ instalaciones              | 2,3                | 2                 | 1,2,3     | 1,2,3
+ instalar                   | 2,3                | 3                 | 1,2,3     | 1,2,3
+ servicio                   | 1,2,3,6            | 1,3,6             | 1,2,3,6   | 1,2,3,6
+ servicios                  | 1,2,3,6            | 2                 | 1,2,3,6   | 1,2,3,6
+ configuraci├│n              | 4                  | 4                 | 4,5       | 4,5
+ configuracion              | 4                  | 4                 | -         | 4
+ configurar                 | 5                  | 5                 | 4,5       | 4,5
+ documento                  | 4,5                | 5                 | 4,5       | 4,5
+ documentos                 | 4,5                | 4                 | 4,5       | 4,5
+ "instalaci├│n del servicio" | 1,6                | 1,6               | 1,3       | 1,3,6
+ "instalacion del servicio" | 1,6                | 1,6               | 6         | 1,6
+(13 rows)
+
+

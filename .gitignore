@@ -1,0 +1,25 @@
+# Dependencias y compilacion
+node_modules/
+dist/
+build/
+.next/
+coverage/
+*.tsbuildinfo
+
+# Configuracion local y secretos (ADR-14)
+.env
+.env.*
+!.env.example
+
+# Datos locales (ADR-10, ADR-15)
+storage/
+.cache/
+
+# Registros y temporales
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Enunciado original de la prueba (documento del evaluador, no se publica)
+KATA*.pdf

@@ -1,0 +1,3 @@
+﻿{"clientes_sse":1,"eventos":300,"entregas_esperadas":300,"entregas_recibidas":300,"notify_a_backend_ms":{"p50":4.99,"p95":6.82,"max":7.46},"notify_a_cliente_sse_ms":{"p50":5.44,"p95":7.3,"p99":7.65,"max":8.03},"rss_mb_antes":49,"rss_mb_despues":54}
+{"clientes_sse":100,"eventos":300,"entregas_esperadas":30000,"entregas_recibidas":30000,"notify_a_backend_ms":{"p50":2.47,"p95":4.57,"max":8.35},"notify_a_cliente_sse_ms":{"p50":9.76,"p95":15.17,"p99":21.65,"max":29.53},"rss_mb_antes":54,"rss_mb_despues":70}
+{"clientes_sse":1000,"eventos":300,"entregas_esperadas":300000,"entregas_recibidas":300000,"notify_a_backend_ms":{"p50":9.7,"p95":19.15,"max":63.37},"notify_a_cliente_sse_ms":{"p50":81.52,"p95":162.41,"p99":239.62,"max":310.23},"rss_mb_antes":79,"rss_mb_despues":124}

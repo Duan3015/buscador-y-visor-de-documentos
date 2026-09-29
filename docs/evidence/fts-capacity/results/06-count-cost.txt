@@ -1,0 +1,26 @@
+ consulta | coincidentes | count_p50_ms | count_p95_ms | count_max_ms 
+----------+--------------+--------------+--------------+--------------
+ Dulcinea |          517 |          0.1 |        126.3 |        136.6
+(1 row)
+
+     consulta      | coincidentes | count_p50_ms | count_p95_ms | count_max_ms 
+-------------------+--------------+--------------+--------------+--------------
+ molinos de viento |         1048 |          0.2 |          0.4 |          0.4
+(1 row)
+
+     consulta     | coincidentes | count_p50_ms | count_p95_ms | count_max_ms 
+------------------+--------------+--------------+--------------+--------------
+ caballero armado |         1092 |          0.2 |          0.4 |          0.6
+(1 row)
+
+    consulta    | coincidentes | count_p50_ms | count_p95_ms | count_max_ms 
+----------------+--------------+--------------+--------------+--------------
+ vuestra merced |         1286 |          0.2 |          0.2 |          0.2
+(1 row)
+
+     consulta     | coincidentes | count_p50_ms | count_p95_ms | count_max_ms 
+------------------+--------------+--------------+--------------+--------------
+ "vuestra merced" |         1286 |          0.1 |          0.2 |          0.3
+(1 row)
+
+

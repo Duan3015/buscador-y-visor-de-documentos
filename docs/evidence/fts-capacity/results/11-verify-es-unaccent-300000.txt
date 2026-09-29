@@ -1,0 +1,32 @@
+psql:/tmp/11.sql:10: NOTICE:  table "docs_cap" does not exist, skipping
+ 
+ docs | chars_min | chars_max | texto_total | gin_index | vector_promedio 
+------+-----------+-----------+-------------+-----------+-----------------
+ 1500 |    300000 |    300000 | 440 MB      | 14 MB     | 81 kB
+(1 row)
+
+ consulta | coincidentes | rank_p50_ms | rank_p95_ms | rank_max_ms | full_p50_ms | full_p95_ms | full_max_ms 
+----------+--------------+-------------+-------------+-------------+-------------+-------------+-------------
+ Dulcinea |          562 |        45.1 |       107.8 |       116.8 |       442.3 |       786.6 |       874.9
+(1 row)
+
+     consulta      | coincidentes | rank_p50_ms | rank_p95_ms | rank_max_ms | full_p50_ms | full_p95_ms | full_max_ms 
+-------------------+--------------+-------------+-------------+-------------+-------------+-------------+-------------
+ molinos de viento |         1051 |        98.8 |       111.0 |       117.0 |       461.0 |       554.4 |       616.9
+(1 row)
+
+     consulta     | coincidentes | rank_p50_ms | rank_p95_ms | rank_max_ms | full_p50_ms | full_p95_ms | full_max_ms 
+------------------+--------------+-------------+-------------+-------------+-------------+-------------+-------------
+ caballero armado |         1109 |       103.9 |       117.1 |       163.1 |       473.6 |       536.4 |       599.8
+(1 row)
+
+    consulta    | coincidentes | rank_p50_ms | rank_p95_ms | rank_max_ms | full_p50_ms | full_p95_ms | full_max_ms 
+----------------+--------------+-------------+-------------+-------------+-------------+-------------+-------------
+ vuestra merced |         1301 |        95.8 |       102.0 |       156.5 |       460.3 |       475.9 |       511.4
+(1 row)
+
+     consulta     | coincidentes | rank_p50_ms | rank_p95_ms | rank_max_ms | full_p50_ms | full_p95_ms | full_max_ms 
+------------------+--------------+-------------+-------------+-------------+-------------+-------------+-------------
+ "vuestra merced" |         1301 |        96.8 |       117.4 |       140.0 |       469.9 |       525.7 |       597.2
+(1 row)
+

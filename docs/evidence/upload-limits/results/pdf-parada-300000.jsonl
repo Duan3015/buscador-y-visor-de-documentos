@@ -1,0 +1,3 @@
+﻿{"archivo":"texto-250p.pdf","mb":0.57,"paginas_totales":250,"paginas_leidas":116,"caracteres":301582,"carga_ms":113,"extraccion_ms":443,"ms_por_pagina":3.82,"rss_inicial_mb":70,"rss_pico_mb":118,"bloqueo_hilo_max_ms":31,"bloqueo_hilo_p99_ms":16}
+{"archivo":"texto-500p.pdf","mb":1.14,"paginas_totales":500,"paginas_leidas":116,"caracteres":301582,"carga_ms":108,"extraccion_ms":509,"ms_por_pagina":4.39,"rss_inicial_mb":69,"rss_pico_mb":120,"bloqueo_hilo_max_ms":28,"bloqueo_hilo_p99_ms":13}
+{"archivo":"texto-1000p.pdf","mb":2.28,"paginas_totales":1000,"paginas_leidas":116,"caracteres":301582,"carga_ms":102,"extraccion_ms":451,"ms_por_pagina":3.89,"rss_inicial_mb":69,"rss_pico_mb":118,"bloqueo_hilo_max_ms":33,"bloqueo_hilo_p99_ms":13}

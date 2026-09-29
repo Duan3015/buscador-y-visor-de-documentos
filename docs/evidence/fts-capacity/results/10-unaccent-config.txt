@@ -1,0 +1,46 @@
+psql:/tmp/u.sql:5: NOTICE:  extension "unaccent" already exists, skipping
+ 
+--- 1. Lexemas: la configuracion propia equivale a "spanish + unaccent" ---
+                      es_unaccent                       |              spanish_con_unaccent_previo               
+--------------------------------------------------------+--------------------------------------------------------
+ 'instal':2 'instalacion':5 'produccion':10 'servici':8 | 'instal':2 'instalacion':5 'produccion':10 'servici':8
+(1 row)
+
+--- 2. Documentos encontrados (mismo conjunto que la configuracion A de la medicion 9) ---
+          consulta          | encontrados 
+----------------------------+-------------
+ instalaci├│n                | 1,6
+ instalacion                | 1,6
+ instalaciones              | 2,3
+ instalar                   | 2,3
+ servicio                   | 1,2,3,6
+ servicios                  | 1,2,3,6
+ configuraci├│n              | 4
+ configuracion              | 4
+ configurar                 | 5
+ documento                  | 4,5
+ documentos                 | 4,5
+ "instalaci├│n del servicio" | 1,6
+ "instalacion del servicio" | 1,6
+ Configuraci├│n              | 4
+(14 rows)
+
+--- 3. Resaltado: consulta sin tilde sobre texto con tilde, el fragmento conserva las tildes ---
+                             con_es_unaccent                              |    con_spanish_sin_config_propia     
+--------------------------------------------------------------------------+--------------------------------------
+ [instalaci├│n] del servicio requiere configuraci├│n previa en [producci├│n] | La instalaci├│n del servicio requiere
+(1 row)
+
+--- 4. Consultas hostiles y vacias con la configuracion propia ---
+            q             |            tsquery            
+--------------------------+-------------------------------
+ foo:* (bar               | 'foo' & 'bar'
+ a & b | c ! d            | 'b' & 'c' & 'd'
+ el de la                 | 
+                          | 
+ drop table documents; -- | 'drop' & 'tabl' & 'documents'
+(5 rows)
+
+psql:/tmp/u.sql:47: NOTICE:  text-search query contains only stop words or doesn't contain lexemes, ignored
+psql:/tmp/u.sql:47: NOTICE:  text-search query doesn't contain lexemes: "   "
+
