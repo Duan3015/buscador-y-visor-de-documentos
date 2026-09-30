@@ -40,7 +40,7 @@ npm install
 # 3. PostgreSQL (espera a que este saludable)
 npm run db:up
 
-# 4. Esquema de base de datos
+# 4. Esquema de base de datos (compila packages/shared y aplica migraciones)
 npm run db:migrate
 
 # 5. API en el puerto 3001 y frontend en el puerto 3000

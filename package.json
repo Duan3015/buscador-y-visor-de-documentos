@@ -16,7 +16,7 @@
     "build": "npm run build:shared && npm run build -w backend && npm run build -w frontend",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
-    "db:migrate": "npm run db:migrate -w backend",
+    "db:migrate": "npm run build:shared && npm run db:migrate -w backend",
     "dev": "npm run build:shared && concurrently -k -n api,web -c blue,green \"npm run start:dev -w backend\" \"npm run dev -w frontend\"",
     "dev:api": "npm run build:shared && npm run start:dev -w backend",
     "dev:web": "npm run build:shared && npm run dev -w frontend",
