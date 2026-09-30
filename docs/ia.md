@@ -2,8 +2,6 @@
 
 Este documento describe cómo se usó la IA en la prueba técnica "Buscador y Visor de Documentos Técnicos", qué produjo, qué se validó y qué corrigió el responsable del proyecto. La regla de trabajo fue una sola: **la IA propone, argumenta y mide; el responsable decide.** Ninguna decisión de `docs/architecture.md` se registró como ADR sin aprobación explícita.
 
-> Estado: la etapa de diseño y documentación está completa. La sección 6 (implementación) se actualiza al generar el código.
-
 ## 1. Herramientas
 
 | Herramienta | Uso |
@@ -11,6 +9,7 @@ Este documento describe cómo se usó la IA en la prueba técnica "Buscador y Vi
 | Cursor (modo agente) con un modelo de lenguaje de Anthropic (Claude) | Análisis del enunciado, propuesta y comparación de opciones, redacción de ADR, escritura de scripts de medición y edición de documentos. La versión exacta del modelo pudo variar entre sesiones |
 | Docker con PostgreSQL 17 desechable | Entorno donde la IA ejecutó las mediciones (contenedores efímeros) |
 | Node.js y `pdfjs-dist` | Scripts de medición de extracción de PDF, hash SHA-256 y latencia de eventos |
+| Jest, Supertest y el script `bench:search` del proyecto | Pruebas unitarias, de integración y benchmark de la API, ejecutados por la IA durante la implementación y la verificación |
 | Mermaid (analizador oficial) | Validación de sintaxis de los 8 diagramas del documento |
 | Repositorio de referencia `ribolost/kata-ecommerce-descuentos` | Prueba similar entregada por el responsable como referencia de formato y de criterios de evaluación |
 
@@ -34,6 +33,10 @@ Este documento describe cómo se usó la IA en la prueba técnica "Buscador y Vi
 | Arquitectura, contrato y frontend | Estructura por módulos, API REST, frontend | ADR-09, ADR-11, ADR-12 | Aprobación uno a uno |
 | Pruebas, seguridad y entorno | Estrategia de pruebas, manejo de errores y docker-compose | ADR-13, ADR-14, ADR-15 | Que no hubiera autenticación; que CORS se mantuviera simplificado |
 | Vistas, trade-offs y escalabilidad | Diagramas, tabla consolidada y capítulo de escalabilidad | Secciones 3, 7 y 8 de `architecture.md` | Aprobación de cada sección |
+| Implementación (código base) | Generar el backend (módulos, casos de uso, adaptadores, worker, SSE), el frontend (carga, búsqueda, visor y estados en tiempo real) y los esquemas compartidos según los ADR | `backend/`, `frontend/` y `packages/shared/` | Que cada módulo cumpliera su ADR, sin funciones fuera de alcance (sección 6) |
+| Generación de pruebas | Pruebas unitarias con dobles en memoria, pruebas de integración contra PostgreSQL real y archivos de prueba (TXT, Markdown y PDF válidos, corruptos, cifrados y sin texto) | 216 pruebas unitarias del backend, 142 del frontend y 4 archivos de integración | Umbral de cobertura del backend y que los casos de borde tuvieran una prueba trazable por identificador |
+| Optimización de consultas | Medir la búsqueda por la API, analizar el plan de ejecución, reestructurar la consulta y acotar el resaltado | `docs/evidence/api-benchmark/` y ADR-03 | Aprobó las dos correcciones y el tope de 100.000 caracteres; exigió que el resultado se midiera de nuevo |
+| Resolución de errores y revisión final | Diagnosticar fallos (carga del benchmark, archivos de configuración del repositorio) y contrastar el entregable con el enunciado | Sección 6.2 | Qué ajustes se aplicaban antes de la entrega |
 
 ## 4. Prompts clave y su refinamiento
 
@@ -51,6 +54,9 @@ Los prompts se reproducen de forma literal o resumida. La columna final muestra 
 | "Se pide buscar relacionados en la prueba técnica, valida si es un requerimiento; y si hay problema con los acentos, ¿es posible quitarlos e indexarlos sin acentos?" | Verificar antes de aprobar el vector doble | Vector doble descartado; se adoptó la configuración `es_unaccent` |
 | "¿Por qué existe pageSize si el paginado va a ser por 10?" | Cuestionar un parámetro innecesario | `pageSize` eliminado; `PAGE_SIZE` fijo |
 | "No sé si en un entorno local es válido tener en cuenta el CORS; si no vale la pena, es mejor quitarlo." | Cuestionar una medida de seguridad en local | La IA explicó que el navegador exige CORS por el cambio de puerto; se mantuvo simplificado |
+| "Ya acabó el proceso bash, valida si todo salió bien." (con el recordatorio de actuar como arquitecto y validar el MVP) | Interpretar el resultado del benchmark en lugar de aceptarlo | La IA encontró que la carga había fallado por tiempo de espera y que la búsqueda no cumplía el criterio; diagnosticó que el índice no se usaba |
+| Respuestas "sí" y "sí, con 100.000" a las correcciones propuestas | Aprobar cambios de código con su costo declarado | Consulta reestructurada y resaltado acotado, con nuevas pruebas de integración y una nueva medición |
+| "Valida la prueba técnica y valida qué hace falta como entregable." | Revisión final contra el enunciado | Hallazgos de la sección 6.2: versión de Node ausente en el README y `docs/ia.md` desactualizado |
 
 ## 5. Validación humana y registro de decisiones corregidas
 
@@ -88,6 +94,7 @@ Los prompts se reproducen de forma literal o resumida. La columna final muestra 
 - **Valores no medidos, declarados:** la sección 7.3 de `architecture.md` lista los valores de criterio. Un riesgo conocido sin medición (`NOTIFY` con muchas transacciones por segundo) se redactó como riesgo, no como dato.
 - **Sintaxis verificada por herramienta:** los diagramas Mermaid se validaron con el analizador oficial; no se revisaron visualmente en un visor.
 - **Coherencia entre secciones:** revisión cruzada de ADR, catálogo de patrones, casos de borde, vistas y capítulos antes de la aprobación global.
+- **Código verificado por ejecución:** las pruebas unitarias, de integración y de cobertura se ejecutaron tras cada cambio relevante, y el proyecto se instaló y compiló desde un clon limpio del repositorio para comprobar que no depende de archivos locales sin versionar.
 
 ## 6. Implementación
 
@@ -102,6 +109,23 @@ El código lo generó la IA bajo el mismo protocolo. Para cada módulo, el respo
 
 - **Pruebas:** al cierre de esta corrección, 216 pruebas unitarias del backend, 142 del frontend y 4 archivos de integración contra PostgreSQL real, todos en verde.
 - **Benchmark de la API (ADR-13):** la primera corrida no cumplió el criterio (peor p95 de 1.242,7 ms con 5 clientes). El responsable aprobó, una por una, las dos correcciones propuestas por la IA: reestructurar la consulta para usar el índice y limitar la ventana de resaltado a 100.000 caracteres (nuevo límite documentado en ADR-03). La segunda corrida cumple (peor p95 de 491,7 ms). Ambas corridas y el diagnóstico están en `docs/evidence/api-benchmark/`; los resultados crudos conservados corresponden solo a la segunda.
-- **Incidencia de la carga:** el cargador del benchmark agotó su espera fija de 30 minutos con 5.000 documentos; la medición se ejecutó con `--skip-load` una vez indexados. Queda pendiente decidir si la espera se hace proporcional al volumen.
+- **Limitación conocida del cargador del benchmark:** espera como máximo 30 minutos a que el worker indexe los documentos. Con 5.000 documentos no alcanzó, por lo que la carga y la medición se ejecutaron por separado (`--skip-load`). Está documentado en `docs/evidence/api-benchmark/`.
 - **Cambio con prueba asociada:** la corrección de la consulta incluye una prueba de integración que falla si el plan de ejecución deja de usar el índice, para que esta clase de regresión no dependa del benchmark.
-- **Prompts de implementación:** no se detallan aquí uno por uno; el historial de decisiones aprobadas está en la sección 5.1.
+- **Prompts de implementación:** no se reproducen los prompts de escritura de cada archivo; las decisiones que dirigieron el código están en las secciones 4 y 5.
+
+### 6.2 Revisión final contra el enunciado
+
+Antes de la entrega se contrastó el proyecto con el enunciado y su checklist de evaluación.
+
+| Requisito | Verificación | Resultado |
+| :-- | :-- | :-- |
+| Búsqueda sin `LIKE` | Búsqueda en el código del backend de `LIKE` e `ILIKE` | Ninguna sentencia los usa; solo aparece la palabra en un comentario. La búsqueda usa `tsvector`, GIN y `websearch_to_tsquery` |
+| Latencia de búsqueda de 400 ms a 1 s | Benchmark de la API con 5.000 documentos, 1 y 5 clientes | Peor p95 de 491,7 ms (`docs/evidence/api-benchmark/`) |
+| Carga con metadatos, respuesta inmediata y estado `PROCESANDO` | Pruebas de integración del endpoint de carga | Cubierto |
+| Notificación en tiempo real sin sondeo | SSE con `LISTEN/NOTIFY`; pruebas del canal y del cliente con un `EventSource` simulado | Cubierto |
+| Manejo de errores y validación de datos | Filtro global de excepciones con formato Problem Details y esquemas estrictos | Cubierto |
+| Variables de entorno | `.env.example` en `backend/` y `frontend/`, validación al arrancar | Cubierto |
+| Pruebas unitarias y de integración del backend y pruebas del frontend | 216 unitarias y 4 archivos de integración del backend; 142 del frontend | Todas en verde |
+| Compilar y ejecutar con las instrucciones del README | Instalación y compilación desde un clon limpio | Compila. El README no indicaba la versión mínima de Node; se corrigió |
+| `docs/architecture.md` y `docs/ia.md` | Revisión de su contenido contra los cuatro elementos exigidos a cada uno | `docs/ia.md` seguía con avisos de la etapa de diseño y sin las etapas de implementación; se actualizó |
+| Interfaz clara y funcional | Las páginas de carga y búsqueda responden y la API devuelve resultados con fragmentos resaltados; las pruebas de componentes están en verde | El recorrido completo en el navegador queda para el ensayo de la demostración |
