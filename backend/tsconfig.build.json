@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    // Sin compilacion incremental: nest borra dist antes de compilar y un .tsbuildinfo previo
+    // haria que tsc no emitiera nada.
+    "incremental": false,
+    "types": ["node"],
+    "incremental": false
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "test", "**/*.spec.ts"]
+}

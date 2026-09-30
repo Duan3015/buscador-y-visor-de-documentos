@@ -1,0 +1,9 @@
+Guia de instalacion del servidor
+
+Este documento describe los pasos para la instalacion del servidor en un entorno de produccion.
+Primero se prepara la base de datos y luego se configura la aplicacion.
+
+Configuracion inicial de la base de datos: cree el usuario, la base y aplique las migraciones.
+La conexion se configura mediante la variable DATABASE_URL.
+
+Verificacion: la aplicacion debe responder en el puerto configurado y mostrar el estado saludable.
