@@ -1,76 +1,49 @@
 # Arquitectura: Buscador y Visor de Documentos Técnicos
 
-> Estado del documento: en revisión final. Cada decisión se registró como ADR solo después de ser aprobada.
-> Leyenda de estado: Accepted (aprobada), Proposed (propuesta pendiente de aprobación).
+Este documento describe cómo está construido el sistema, por qué se tomaron las decisiones principales y qué se dejó fuera de forma deliberada. Cada decisión se registra como un ADR (registro de decisión de arquitectura) con su contexto, las opciones evaluadas, la justificación y los compromisos aceptados. Las cifras de rendimiento provienen de mediciones guardadas en `docs/evidence/`; los valores que son criterio de ingeniería y no resultado de una medición se declaran como tales (sección 7.3).
 
 ## Índice
 
-1. Alcance, supuestos y checklist de entregables
+1. Alcance, supuestos y trazabilidad con el enunciado
 2. Requisitos no funcionales
 3. Vistas de arquitectura
 4. Decisiones arquitectónicas (ADR)
-5. Catálogo de patrones de diseño
+5. Patrones de diseño, estilos y prácticas
 6. Catálogo de casos de borde
 7. Trade-offs consolidados
 8. Escalabilidad ante un aumento masivo de documentos
-9. Secciones pendientes de redacción
 
 ---
 
-## 1. Alcance, supuestos y checklist de entregables
+## 1. Alcance, supuestos y trazabilidad con el enunciado
 
 ### 1.1 Supuestos e interpretaciones
 
-- **Latencia "400 ms a 1 s".** Se interpreta como un techo: p95 de búsqueda menor o igual a 1000 ms. No se introducen retardos artificiales para alcanzar el piso de 400 ms. La interpretación se declara explícitamente y se respalda con un benchmark.
-- **Entorno de demostración.** Local. PostgreSQL (y los servicios de infraestructura que se definan) corren en Docker; backend y frontend corren en el host.
-- **Prohibición de `LIKE`.** No se usará `LIKE`, `ILIKE` ni equivalentes sin índice de búsqueda en ninguna consulta del motor de búsqueda.
+- **Latencia "400 ms a 1 s".** Se interpreta como un techo: p95 de búsqueda menor o igual a 1000 ms. No se introducen retardos artificiales para alcanzar el piso de 400 ms. La interpretación se declara de forma explícita y se respalda con un benchmark.
+- **Entorno de demostración.** Local. PostgreSQL corre en Docker; el backend y el frontend corren en el equipo anfitrión.
+- **Prohibición de `LIKE`.** Ninguna consulta del motor de búsqueda usa `LIKE`, `ILIKE` ni equivalentes sin índice de búsqueda.
 
-### 1.2 Checklist de entregables (fuente: enunciado de la prueba)
+### 1.2 Trazabilidad con el enunciado
 
-Estructura del repositorio:
+La tabla indica dónde se cubre cada requisito del enunciado.
 
-- [ ] `backend/` - API y worker (NestJS).
-- [ ] `frontend/` - aplicación web (Next.js).
-- [ ] `packages/shared/` - DTOs, tipos y contratos de eventos compartidos (opcional en el enunciado; ver ADR-02).
-- [ ] `docs/architecture.md` - obligatorio.
-- [ ] `docs/ia.md` - obligatorio.
-- [ ] `docker-compose.yml` - deseable.
-- [ ] `README.md` - instrucciones de ejecución y compilación.
-- [ ] `.env.example` en backend y frontend (gestión limpia de variables de entorno).
-
-Contenido obligatorio de `docs/architecture.md`:
-
-- [ ] Diagrama de arquitectura o flujo (Mermaid) con Frontend, Backend, Motor de búsqueda y Mecanismo de tiempo real.
-- [ ] Justificación de decisiones: stack, base de datos y motor de búsqueda, y cómo cumplen la latencia objetivo.
-- [ ] Estrategia de tiempo real (WebSocket, SSE o PubSub).
-- [ ] Escalabilidad ante un aumento masivo de documentos.
-- [ ] Justificación de la arquitectura elegida (exigida en la sección de calidad de código del enunciado).
-
-Contenido obligatorio de `docs/ia.md`:
-
-- [ ] Herramientas de IA utilizadas.
-- [ ] Casos de uso de la IA por etapa.
-- [ ] Prompts clave y su refinamiento.
-- [ ] Validación humana del código generado (se alimenta del log de decisiones rechazadas o ajustadas de este proceso).
-
-Funcionalidad (HU-01 a HU-04):
-
-- [ ] HU-01: carga con metadatos (TXT, PDF, Markdown), validación de formato y tamaño, respuesta inmediata con ID de seguimiento y estado `PROCESANDO`.
-- [ ] HU-02: búsqueda por título, metadatos y contenido, sin `LIKE`, con paginación y resaltado de fragmentos, entre 400 ms y 1 s.
-- [ ] HU-03: visor con contenido estructurado y metadatos completos.
-- [ ] HU-04: notificación en tiempo real (`INDEXADO` o `ERROR`) sin polling.
-
-Calidad:
-
-- [ ] Manejo de errores con middleware o filtros de excepción y validación de datos.
-- [ ] Pruebas unitarias y de integración de los componentes críticos del backend (Jest).
-- [ ] Pruebas del frontend (Jest).
-- [ ] Evidencia de rendimiento (benchmark con dataset masivo).
-
-Sustentación (30 minutos):
-
-- [ ] Presentación y demo en vivo (15 min).
-- [ ] Preguntas técnicas sobre diseño, concurrencia e IA (15 min).
+| Requisito | Dónde se cubre |
+| :-- | :-- |
+| Estructura del repositorio (`backend/`, `frontend/`, `packages/shared/`) | ADR-02, ADR-09, ADR-12 |
+| `docker-compose.yml`, `README.md` y `.env.example` en backend y frontend | ADR-14, ADR-15 |
+| Diagrama de arquitectura con frontend, backend, motor de búsqueda y tiempo real | Sección 3 |
+| Justificación de stack, base de datos y motor de búsqueda, y cumplimiento de la latencia | ADR-02, ADR-03 y `docs/evidence/` |
+| Estrategia de tiempo real | ADR-07 |
+| Escalabilidad ante un aumento masivo de documentos | Sección 8 |
+| Justificación de la arquitectura elegida | ADR-01, ADR-09 y sección 5 |
+| HU-01: carga con metadatos, validación y respuesta inmediata en estado `PROCESANDO` | ADR-04, ADR-06, ADR-08, ADR-10, ADR-11 |
+| HU-02: búsqueda por título, metadatos y contenido, sin `LIKE`, con paginación y resaltado | ADR-03, ADR-11, ADR-12 |
+| HU-03: visor con contenido y metadatos completos | ADR-10, ADR-11, ADR-12 |
+| HU-04: notificación de `INDEXADO` o `ERROR` sin sondeo | ADR-07, ADR-08 |
+| Manejo de errores y validación de datos | ADR-11, ADR-14 |
+| Pruebas unitarias y de integración (Jest) y pruebas del frontend | ADR-13 |
+| Evidencia de rendimiento con un conjunto de datos masivo | ADR-13 y `docs/evidence/api-benchmark/` |
+| Uso de inteligencia artificial | `docs/ia.md` |
 
 ---
 
@@ -78,11 +51,11 @@ Sustentación (30 minutos):
 
 | Atributo | Requisito | Verificación |
 | :-- | :-- | :-- |
-| Latencia de búsqueda | p95 menor o igual a 1000 ms. Verificado en el peor caso (documentos exactamente en el tope de indexación, páginas de 10): p95 máximo de 607,4 ms | `docs/evidence/fts-capacity/` y benchmark de la API (ADR-13) |
+| Latencia de búsqueda | p95 menor o igual a 1000 ms. Verificado en la base de datos en el peor caso (documentos exactamente en el tope de indexación, páginas de 10): p95 máximo de 607,4 ms. Verificado por la API con 5.000 documentos de perfil mixto, 1 y 5 clientes: peor p95 de 491,7 ms, tras corregir el uso del índice y acotar el resaltado (ADR-03) | `docs/evidence/fts-capacity/` y `docs/evidence/api-benchmark/` (ADR-13) |
 | Respuesta de carga | La API responde de inmediato (asíncrona) con ID y estado `PROCESANDO` | Prueba de integración |
 | Notificación | El cliente se entera del cambio de estado sin polling | Prueba de integración del canal de eventos |
 | Resiliencia | Un fallo del procesamiento no altera destructivamente el documento ni el archivo original | Casos de borde E-12 a E-15 |
-| Escalabilidad | El procesamiento escala horizontalmente sin modificar el dominio | Capítulo de escalabilidad |
+| Escalabilidad | El procesamiento escala horizontalmente sin modificar el dominio | Sección 8 |
 | Seguridad | Validación por contenido real del archivo, sanitización de nombre y de Markdown, límites de tamaño | Casos de borde E-01 a E-06, E-24 |
 | Testabilidad | Cobertura mínima del 80% en las capas lógicas del backend (piso, no techo), exigida por Jest (ADR-13) | Reporte de cobertura de Jest |
 | Configuración | Todo parámetro sensible o de entorno en `.env`, validado al arranque | Caso E-29 |
@@ -91,7 +64,7 @@ Sustentación (30 minutos):
 
 ## 3. Vistas de arquitectura
 
-Las vistas son una descripción de las decisiones de la sección 4, no decisiones nuevas. Los diagramas de carga y de worker están en ADR-08.
+Las vistas resumen las decisiones de la sección 4. Los diagramas del flujo de carga y del worker están en ADR-08.
 
 ### 3.1 Vista general: frontend, backend, motor de búsqueda y tiempo real
 
@@ -172,7 +145,7 @@ flowchart TB
 ```
 
 - El navegador llama a la API directamente (CORS, ADR-14) y no a través del servidor de Next.js, que puede almacenar en búfer las respuestas de flujo (ADR-07). Next.js solo entrega la aplicación (ADR-12).
-- En desarrollo los dos roles comparten un proceso; en producción serían procesos separados que se escalan de forma independiente (capítulo de escalabilidad).
+- En desarrollo los dos roles comparten un proceso; en producción serían procesos separados que se escalan de forma independiente (sección 8).
 - PostgreSQL cumple cuatro funciones (datos, índice de búsqueda, cola y bus de eventos). Es una decisión de simplicidad operativa con evolución identificada en cada caso (ADR-03, ADR-04, ADR-07).
 
 ### 3.4 Secuencia de búsqueda (HU-02)
@@ -233,7 +206,6 @@ sequenceDiagram
 
 ### ADR-01: Estilo arquitectónico general
 
-- **Estado:** Accepted.
 - **Contexto:** La ruta de escritura (carga, extracción, indexación) es pesada y asíncrona. La ruta de lectura (búsqueda) exige baja latencia. La entrega es de un día y se evalúa la escalabilidad.
 - **Opciones evaluadas:**
   - (a) Monolito modular en un solo proceso.
@@ -250,8 +222,7 @@ sequenceDiagram
 
 ### ADR-02: Stack tecnológico
 
-- **Estado:** Accepted.
-- **Contexto:** El enunciado permite Express, NestJS, FastAPI, Spring Boot o Quarkus en backend, y React, Next.js o Angular en frontend. El desarrollador domina NestJS y Next.js. Las pruebas se ejecutan con Jest en ambos lados. La demo es local con la base de datos en Docker.
+- **Contexto:** El enunciado permite Express, NestJS, FastAPI, Spring Boot o Quarkus en backend, y React, Next.js o Angular en frontend. El equipo tiene experiencia con NestJS y Next.js. Las pruebas se ejecutan con Jest en ambos lados. La demo es local con la base de datos en Docker.
 - **Opciones evaluadas:**
   - (A) Java 21 + Spring Boot + Angular.
   - (B) NestJS + Next.js con `packages/shared` en TypeScript.
@@ -269,7 +240,6 @@ sequenceDiagram
 
 ### ADR-03: Motor de búsqueda y modelo de indexación
 
-- **Estado:** Accepted.
 - **Contexto:** HU-02 exige búsqueda por título, metadatos y contenido, con paginación y resaltado, sin `LIKE`. La demo es local con un contenedor de base de datos. El texto es en español.
 - **Opciones evaluadas:**
   - PostgreSQL con búsqueda de texto completo (`tsvector` y GIN).
@@ -298,9 +268,22 @@ El límite no es un valor arbitrario. Se derivó de cuatro mediciones sobre Post
 
 Conclusión: 300.000 caracteres es el valor medido que cumple el objetivo con margen. 400.000 caracteres no se midió y no se adopta sin medirlo.
 
+#### Uso del índice y ventana de resaltado (evidencia en `docs/evidence/api-benchmark/`)
+
+El benchmark de la API con 5.000 documentos de perfil mixto (ADR-13) **no cumplió** el criterio en su primera corrida: peor p95 de 1.242,7 ms con 5 clientes. El diagnóstico encontró dos causas que las mediciones anteriores no habían detectado:
+
+1. **El índice GIN no se usaba.** Las mediciones de la base de datos registraron tiempos, pero no inspeccionaron el plan de ejecución; se asumió que crear el índice implicaba usarlo. El planificador elegía un recorrido secuencial de `document_contents` (la tabla principal es pequeña porque vectores y texto viven en TOAST, y el costo de evaluar cada vector se subestima). Además, con el `tsquery` en un CTE unido por `CROSS JOIN` o en una subconsulta escalar, el planificador no puede usar el índice ni con el recorrido secuencial desactivado. Costo: unos 110 a 125 ms de CPU por solicitud, incluso sin resultados.
+2. **El resaltado de la página domina con términos frecuentes** y crece con la longitud del texto (esta ADR ya lo advertía en la medición 3). Con el resaltado sobre el prefijo completo, `ts_headline` de las 10 filas de la página costó entre 350 y 450 ms con la palabra `caballero`.
+
+Las correcciones fueron dos:
+
+- **Estructura de la consulta:** los ids coincidentes se obtienen en un CTE materializado con `search_vector @@ websearch_to_tsquery('es_unaccent', q)` escrito en línea, y la transacción de búsqueda ejecuta `SET LOCAL enable_seqscan = off` (solo dentro de esa transacción) para que el planificador use el índice. Las pruebas de integración verifican con `EXPLAIN` que el plan usa `document_contents_search_vector_idx` y no recorre `document_contents`, de modo que una regresión falla en las pruebas y no solo en el benchmark.
+- **Ventana de resaltado (`MAX_HIGHLIGHT_CHARS`, 100.000 caracteres):** `ts_headline` se calcula solo sobre los primeros `MAX_HIGHLIGHT_CHARS` caracteres del prefijo indexado. El ranking y la coincidencia siguen usando todo el vector indexado. **Nuevo límite conocido:** en un documento largo, una coincidencia que solo aparezca después de esa ventana hace que el documento aparezca en los resultados sin fragmento (igual que las coincidencias solo en metadatos); el visor (HU-03) sigue mostrando el texto completo.
+- **Resultado:** con ambas correcciones, segunda corrida del benchmark: peor p95 de 491,7 ms (1 y 5 clientes), consulta sin resultados de 157 ms a 4,6 ms. Ver `docs/evidence/api-benchmark/README.md`.
+
 #### Composición del vector y de la consulta
 
-Corrección aprobada. Las mediciones anteriores se hicieron con la configuración `spanish` sin `unaccent`. Al revisar el diseño contra HU-02 aparecieron tres puntos que lo completan y corrigen (evidencia en `docs/evidence/fts-capacity/`, mediciones 5 a 11):
+Las primeras mediciones usaron la configuración `spanish` sin `unaccent`. Al contrastar el diseño con HU-02 se ajustaron tres puntos (evidencia en `docs/evidence/fts-capacity/`, mediciones 5 a 11):
 
 1. **Alcance de la búsqueda:** HU-02 pide buscar "palabras clave o frases" en título, metadatos y contenido. No pide búsqueda por términos relacionados. Se garantiza que una palabra escrita con o sin tilde encuentra los documentos que la contienen; la coincidencia por raíz (plurales y formas verbales) es un beneficio del lematizador, no un requisito.
 2. **Título y metadatos:** el vector de cada documento se calcula una vez, en la transacción final (ADR-08), con pesos: título (`A`), autor, categoría, etiquetas y versión (`B`) y prefijo del contenido (`D`). Como los metadatos son inmutables en el MVP (ADR-11), no hay que recalcularlo. Sigue siendo un vector y un índice GIN por documento, la forma que se midió.
@@ -324,6 +307,7 @@ ALTER TEXT SEARCH CONFIGURATION es_unaccent
 | Parámetro | Valor inicial | Origen |
 | :-- | :-- | :-- |
 | `MAX_INDEXABLE_CHARS` | 300.000 caracteres | Medición 4 |
+| `MAX_HIGHLIGHT_CHARS` | 100.000 caracteres; no puede superar `MAX_INDEXABLE_CHARS` (se verifica al arrancar, E-29) | Benchmark de la API (`docs/evidence/api-benchmark/`): reduce alrededor de un 45 % la latencia de términos frecuentes. Valor de criterio de ingeniería: no se midieron otras ventanas |
 | `PAGE_SIZE` | 10 resultados, fijo (constante de `packages/shared`, no configurable por la API) | Medición 4 (la verificación se hizo con páginas de 10) |
 | Invariante `PAGE_SIZE x MAX_INDEXABLE_CHARS <= 3.000.000` | Verificada al arrancar; si no se cumple, el arranque falla (E-29) | Mediciones 3 y 4 |
 | `MAX_UPLOAD_BYTES_TEXT` y `MAX_UPLOAD_BYTES_PDF` (ADR-14) | TXT y Markdown: 3 MB. PDF: 20 MB | TXT/MD: coherencia con `MAX_EXTRACTED_CHARS` (un byte por carácter como mínimo). PDF: probado hasta 23 MB sin costo relevante (`docs/evidence/upload-limits/`) |
@@ -334,7 +318,7 @@ ALTER TEXT SEARCH CONFIGURATION es_unaccent
 
 Reglas de extracción e indexación:
 
-- Si el texto extraído supera `MAX_INDEXABLE_CHARS`, se indexa el prefijo, cortado en un límite de párrafo o de palabra. Se guardan `total_chars`, `indexed_chars` y `is_partially_indexed`. El visor muestra el texto completo con un aviso de indexación parcial. El resaltado se hace solo sobre el prefijo indexado.
+- Si el texto extraído supera `MAX_INDEXABLE_CHARS`, se indexa el prefijo, cortado en un límite de párrafo o de palabra. Se guardan `total_chars`, `indexed_chars` y `is_partially_indexed`. El visor muestra el texto completo con un aviso de indexación parcial. El resaltado de la búsqueda se hace solo sobre los primeros `MAX_HIGHLIGHT_CHARS` caracteres del prefijo indexado.
 - Si `to_tsvector` falla por el límite del vector (caso de texto con muchos identificadores únicos), se reintenta con la mitad del prefijo hasta tres veces. Si persiste, el documento pasa a `ERROR` con motivo `INDEX_LIMIT_EXCEEDED`.
 - El límite de indexación se controla por caracteres extraídos, no por megabytes: el peso de un PDF depende de imágenes y tipografías, no del texto (PDF de 23 MB con 78.000 caracteres frente a PDF de 2,3 MB con 2,6 millones).
 - El número de páginas se lee al abrir el PDF (entre 90 y 330 ms) y se valida contra `MAX_PDF_PAGES` antes de extraer. Pasa a `ERROR` en lugar de truncarse porque el visor (HU-03) muestra el texto completo guardado; truncar dejaría un documento incompleto sin aviso equivalente.
@@ -365,18 +349,17 @@ La fragmentación no se implementa ahora. Se documenta como la evolución que el
 
 - **Trade-off:** se sacrifica precisión de frases exactas después de las primeras 34 páginas y la búsqueda sobre el contenido posterior al tope. Se gana simplicidad de consulta, de operación y de pruebas.
 - **Costo del total exacto (`total` de la respuesta, ADR-11):** contar las coincidencias tarda entre 0,1 y 0,6 ms con la caché caliente y hasta 141 ms en la primera ejecución con la caché fría (1.500 documentos; medido sobre el vector doble descartado, de tamaño similar).
-- **Limitaciones de la evidencia:** corpus literario (no técnico); documentos formados por rebanadas de un corpus de 6,8 millones de caracteres, con más coincidencias por consulta que un corpus real; entre 900 y 4.000 documentos, no 100.000; un solo cliente y configuración por defecto de PostgreSQL. El costo del ranking crece con la cantidad de documentos coincidentes, no con el tamaño total del corpus; con volúmenes mucho mayores hará falta una capa de candidatos (ver capítulo de escalabilidad).
+- **Limitaciones de la evidencia:** corpus literario (no técnico); documentos formados por rebanadas de un corpus de 6,8 millones de caracteres, con más coincidencias por consulta que un corpus real; entre 900 y 4.000 documentos, no 100.000; un solo cliente y configuración por defecto de PostgreSQL. El costo del ranking crece con la cantidad de documentos coincidentes, no con el tamaño total del corpus; con volúmenes mucho mayores hará falta una capa de candidatos (ver sección 8).
 
 ### ADR-04: Procesamiento asíncrono y cola
 
-- **Estado:** Accepted.
 - **Contexto:** HU-01 exige respuesta inmediata con identificador y estado `PROCESANDO`. El procesamiento (extracción e indexación) debe ser resiliente y escalable.
 - **Opciones evaluadas:** BullMQ con Redis, `pg-boss` sobre PostgreSQL, cola en memoria.
 - **Decisión:** `pg-boss`, detrás de `JobQueuePort`.
 - **Justificación técnica:**
   - Encolado transaccional: el registro del documento y el trabajo se insertan en la misma transacción. Con una cola externa hay una escritura doble y un fallo intermedio deja documentos en `PROCESANDO` para siempre.
   - Consumidores competitivos con `SKIP LOCKED`, aptos para varias instancias.
-  - Reintentos con backoff exponencial, expiración, cola de mensajes fallidos con reenvío y deduplicación por clave incluidos.
+  - Reintentos con backoff exponencial, expiración, cola de mensajes fallidos con reenvío y deduplicación por clave disponibles sin código propio.
   - Un solo servicio con estado: la demo local necesita un único contenedor.
   - Estado de la cola observable con SQL.
 - **Trade-offs:**
@@ -387,7 +370,6 @@ La fragmentación no se implementa ahora. Se documenta como la evolución que el
 
 ### ADR-05: Acceso a datos
 
-- **Estado:** Accepted.
 - **Contexto:** Las consultas de búsqueda usan funciones específicas de PostgreSQL. Se requiere migraciones, restricciones únicas, columnas `tsvector` e índices GIN, y compartir transacción con la cola.
 - **Opciones evaluadas:** Drizzle, Kysely, TypeORM, Prisma.
 - **Decisión:** Drizzle ORM, con SQL explícito mediante la etiqueta `sql` para las consultas de búsqueda.
@@ -401,7 +383,6 @@ La fragmentación no se implementa ahora. Se documenta como la evolución que el
 
 ### ADR-06: Detección de duplicados
 
-- **Estado:** Accepted.
 - **Contexto:** El enunciado no exige detectar duplicados: HU-01 pide validar formato y tamaño y responder de inmediato. Es una regla adicional, por lo que debe ser de bajo costo y no comprometer la respuesta inmediata.
 - **Decisión:** Se rechaza con 409 todo archivo cuya huella SHA-256 ya exista. La huella se calcula en el servidor sobre los bytes del archivo, en una sola pasada mientras se recibe. El archivo duplicado no se conserva. La respuesta incluye el identificador y el estado del documento existente. No se detectan duplicados por título, tags o categoría.
 - **Justificación técnica:**
@@ -423,7 +404,6 @@ La fragmentación no se implementa ahora. Se documenta como la evolución que el
 
 ### ADR-07: Mecanismo de tiempo real
 
-- **Estado:** Accepted.
 - **Contexto:** HU-04 exige notificar `INDEXADO` o `ERROR` sin sondeo. El cambio de estado lo produce el proceso worker, que es distinto del proceso que mantiene las conexiones con los navegadores (ADR-01). El canal debe sobrevivir a cortes de conexión sin perder el estado final.
 - **Opciones evaluadas:**
   - **Sondeo corto o largo (long polling):** descartado por el enunciado.
@@ -455,7 +435,6 @@ La fragmentación no se implementa ahora. Se documenta como la evolución que el
 
 ### ADR-08: Consistencia entre archivo, base de datos, cola y eventos
 
-- **Estado:** Accepted.
 - **Contexto:** una carga toca cuatro recursos que no comparten transacción con el sistema de archivos: el archivo almacenado, la fila del documento, el trabajo en la cola y el evento de estado. El procesamiento posterior debe tolerar fallos parciales, entregas duplicadas y caídas del worker sin dejar un documento en un estado falso (por ejemplo `INDEXADO` sin contenido buscable o `PROCESANDO` para siempre).
 - **Decisión:**
   1. **Una sola transacción por cambio de estado.** Cada cambio escribe, en la misma transacción, el estado del documento, su contenido indexado (si aplica) y la notificación `pg_notify`. En la carga se añade el encolado del trabajo con el adaptador `fromDrizzle` de `pg-boss`.
@@ -561,8 +540,7 @@ sequenceDiagram
 
 ### ADR-09: Arquitectura interna del backend
 
-- **Estado:** Accepted.
-- **Contexto:** el backend tiene tres módulos (ADR-01), dos roles de ejecución, transacciones que abarcan varios recursos (ADR-08) y reglas que deben probarse sin base de datos. La estructura debe ser explicable en la defensa y verificable por herramienta, no solo por convención.
+- **Contexto:** el backend tiene tres módulos (ADR-01), dos roles de ejecución, transacciones que abarcan varios recursos (ADR-08) y reglas que deben probarse sin base de datos. La estructura debe poder explicarse con claridad y, en lo posible, verificarse con herramientas y no solo por convención.
 - **Decisión 1: organización por módulo.** Cada módulo contiene sus capas: `domain` (entidades, reglas, puertos), `application` (casos de uso), `infrastructure` (adaptadores) e `interface` (controladores y DTOs).
   - **Frente a organizar por capa** (`domain/`, `application/` y `infrastructure/` globales): el código que cambia junto queda junto, cada módulo declara sus propios puertos y `search` puede extraerse como servicio sin desmontar tres carpetas globales.
   - **Frente a la estructura estándar de NestJS** (controlador, servicio, repositorio): esa estructura mezcla reglas de negocio con acceso a datos y obliga a probar con base de datos.
@@ -578,20 +556,24 @@ backend/src/
   main.ts                   arranque según APP_ROLE (api, worker, all)
   config/                   esquema y validación de variables de entorno, invariantes (E-29)
   database/                 esquema Drizzle, migraciones, proveedor de conexión
-  shared-kernel/            errores de dominio base, Clock, IdGenerator, registro de eventos
+  http/                     filtro global de excepciones y formato Problem Details (ADR-14)
+  shared-kernel/            errores base, Clock, IdGenerator y utilidades comunes
   documents/
-    domain/                 Document (fábrica e invariantes), transiciones de estado, códigos de error, puertos
-    application/            UploadDocument, ProcessDocument, FailDocument, GetDocument, GetDocumentsByIds
-    infrastructure/         repositorio Drizzle, almacenamiento en disco, extractores, cola pg-boss, publicador pg_notify
-    interface/              controladores REST y DTOs
+    domain/                 Document (creación e invariantes), transiciones de estado, errores de procesamiento, puertos
+    application/            UploadDocument, ProcessDocument, FailDocument, GetDocument, GetDocumentsByIds, PurgeErrorDocuments
+    infrastructure/         repositorio Drizzle, unidad de trabajo, almacenamiento en disco, extractores, cola pg-boss, publicador pg_notify
+    interface/              controlador REST, interceptor de carga y consumidor de la cola (worker)
   search/
+    domain/                 puerto SearchRepository (solo consulta)
     application/            SearchDocuments
-    infrastructure/         SearchIndexPort sobre PostgreSQL FTS
+    infrastructure/         PostgresSearchRepository sobre PostgreSQL FTS
     interface/              controlador de búsqueda
   notifications/
-    application/            StreamDocumentEvents
+    domain/                 puertos del canal de eventos
+    application/            EventHub (difusión a los clientes conectados)
     infrastructure/         escuchador LISTEN/NOTIFY
     interface/              controlador SSE
+  scripts/                  benchmark, carga de datos de demostración y limpieza de documentos en ERROR
 packages/shared/            DTOs, DocumentStatus, códigos de error, contrato de eventos
 ```
 
@@ -609,7 +591,7 @@ packages/shared/            DTOs, DocumentStatus, códigos de error, contrato de
 
   `search` define `SearchIndexPort` (solo consulta). La escritura del contenido indexado no pasa por un puerto de búsqueda aparte: es una operación del repositorio, porque debe ir en la misma transacción que el cambio de estado (ADR-08).
 
-- **Notas de implementación** (derivan de decisiones ya aprobadas; no son decisiones nuevas):
+- **Notas de implementación** (consecuencias de las decisiones anteriores):
   - **Dirección de las dependencias, propia de la arquitectura hexagonal:** `domain` no importa NestJS, Drizzle ni otro módulo; `application` solo importa `domain`; `infrastructure` e `interface` importan hacia adentro.
   - **Fronteras entre módulos:** un módulo usa solo los contratos y puertos públicos de otro. `search` lee las tablas que necesita con sus propias consultas (modelo de lectura, CQRS ligero de ADR-01).
   - **Transacciones (ADR-08):** `UnitOfWork` entrega un `TransactionContext` opaco que se pasa al repositorio, a la cola y al publicador, de modo que las escrituras atómicas de ADR-08 no acoplan el dominio a Drizzle.
@@ -618,16 +600,15 @@ packages/shared/            DTOs, DocumentStatus, códigos de error, contrato de
   - **Errores:** los errores de dominio llevan un código estable; el contrato con el cliente queda para ADR-11 y ADR-14.
 - **Consecuencia para las pruebas** (ADR-13): el dominio y los casos de uso se prueban con dobles en memoria de los puertos, sin base de datos ni red; los adaptadores se prueban con integración contra PostgreSQL real.
 - **Trade-offs:**
-  - Más archivos y módulos de composición que un CRUD estándar de NestJS. Se acepta por la capacidad de probar y de sustituir adaptadores, y porque la defensa evalúa el diseño.
+  - Más archivos y módulos de composición que un CRUD estándar de NestJS. Se acepta a cambio de poder probar el núcleo de forma aislada y de sustituir adaptadores.
   - Pasar `TransactionContext` de forma explícita es más verboso que un contexto implícito, pero hace visible qué operaciones son atómicas.
   - `search` duplica la lectura de algunas columnas de `documents`: es el precio de tener un modelo de lectura independiente.
   - **Sin verificación automática de la dirección de dependencias:** se cumple por convención y revisión de código. Evolución: regla `no-restricted-imports` de ESLint por carpeta, para que una violación rompa la integración continua.
-  - **Detalles de implementación diferidos, sin decisión formal:** casos de uso como clases simples (sin `@nestjs/cqrs`) e inyección de los puertos por token. Se resuelven al implementar y se documentan en el README si difieren de lo esperado.
+  - **Detalles de implementación sin decisión formal:** los casos de uso son clases simples, sin `@nestjs/cqrs`, y los puertos se inyectan por token.
 - **Evolución:** extraer `search` como servicio propio reemplazando su adaptador por un cliente remoto; cambiar `FileStorage` a almacenamiento de objetos sin tocar los casos de uso.
 
 ### ADR-10: Extracción de texto y almacenamiento de archivos
 
-- **Estado:** Accepted.
 - **Contexto:** hay que validar que el archivo es lo que dice ser, extraer texto de tres formatos (TXT, Markdown, PDF) dentro de los límites de ADR-03, y guardar el original de forma que el worker nunca lea un archivo a medias. Los cimientos ya están fijados: `TextExtractorPort` con una estrategia por formato (ADR-09), límites de tamaño, páginas y caracteres (ADR-03) y orden archivo, transacción, worker (ADR-08).
 - **Decisión 1: `pdfjs-dist` para PDF, leyendo página a página.**
   - **Frente a `pdf-parse`:** es un envoltorio de una versión antigua de pdf.js; `pdfjs-dist` está mantenido por Mozilla.
@@ -638,7 +619,7 @@ packages/shared/            DTOs, DocumentStatus, códigos de error, contrato de
   - **TXT y Markdown:** sin bytes nulos en la muestra inicial (detecta binarios renombrados). La extensión debe ser coherente con la familia detectada.
   - **Ventaja:** el cliente controla nombre y cabeceras; los bytes no se falsifican sin dejar de ser lo que son. Un fallo responde 415 (E-01). La comprobación propia evita una dependencia para dos reglas de pocas líneas.
 - **Decisión 3: los tres formatos comparten un único contenido de texto; el Markdown se guarda y se indexa tal cual, sin extraer el marcado (alcance de MVP).**
-  - **Modelo de contenido** (`document_contents`): `content` guarda el texto completo (fuente Markdown, texto plano o texto del PDF); `indexed_chars` indica cuántos caracteres del inicio se indexan; `search_vector` es una columna `tsvector` que la transacción final calcula con la composición de ADR-03 (título, metadatos y `left(content, indexed_chars)`, con la configuración `es_unaccent`). El resaltado se aplica sobre `left(content, indexed_chars)`.
+  - **Modelo de contenido** (`document_contents`): `content` guarda el texto completo (fuente Markdown, texto plano o texto del PDF); `indexed_chars` indica cuántos caracteres del inicio se indexan; `search_vector` es una columna `tsvector` que la transacción final calcula con la composición de ADR-03 (título, metadatos y `left(content, indexed_chars)`, con la configuración `es_unaccent`). El resaltado se aplica sobre `left(content, least(indexed_chars, MAX_HIGHLIGHT_CHARS))` (ADR-03).
   - **Por qué no una columna generada:** el prefijo debe poder reducirse a la mitad si el vector supera el límite (E-34, ADR-03), y una columna generada fija el prefijo en el esquema. Calcularlo en la escritura conserva esa regla sin un segundo texto.
   - **Alineación con el enunciado:** HU-03 pide mostrar el contenido y los metadatos sin descargar el archivo; no exige extraer ni depurar el marcado. El Markdown se muestra renderizado y sanitizado (E-24, ADR-12).
   - **Verificado en PostgreSQL 17:** al indexar fuente Markdown, los símbolos de marcado (`#`, `**`, tablas, cercas de código) no generan términos, las etiquetas HTML como `<script>` no se indexan, y solo las direcciones URL entran como términos adicionales. El resaltado sobre la fuente conserva el marcado alrededor de la coincidencia (por ejemplo `**<mark>instalar</mark>**`).
@@ -658,12 +639,11 @@ packages/shared/            DTOs, DocumentStatus, códigos de error, contrato de
   - **Sin descarga del original:** el visor (HU-03) muestra el texto guardado; el endpoint de descarga queda fuera del alcance.
   - **Disco local:** con varias instancias de API o worker hace falta un volumen compartido; con la demo local no aplica. Evolución: implementación de `FileStorage` sobre almacenamiento de objetos.
   - **Ruido de marcado en Markdown:** las direcciones URL del texto se indexan como términos y los fragmentos resaltados muestran el marcado que rodea la coincidencia. Se acepta por alcance de MVP; la evolución es un texto plano derivado del Markdown solo para indexar y resaltar.
-  - **Riesgo técnico a verificar al iniciar la implementación:** `pdfjs-dist` se distribuye como módulo ES. Funciona con `require` en el entorno de las mediciones, pero Jest en modo CommonJS puede exigir configuración. Mitigación: el adaptador queda detrás del puerto, los casos de uso se prueban con un extractor falso y el adaptador se prueba con PDFs reales en integración.
+  - **`pdfjs-dist` es un módulo ES.** No se carga con `require` desde el código CommonJS que genera TypeScript ni desde Jest sin transformación. El adaptador queda detrás del puerto, carga la librería con una importación dinámica, los casos de uso se prueban con un extractor falso y el adaptador se prueba en integración con archivos PDF válidos y corruptos generados por un constructor de pruebas (sección 7.2).
 - **Evolución:** extractor por proceso hijo, OCR opcional como otra estrategia de `TextExtractorPort`, texto plano derivado del Markdown para indexar, detección de codificación y descarga del original.
 
 ### ADR-11: Contrato de API y paquete compartido
 
-- **Estado:** Accepted.
 - **Contexto:** HU-01 permite REST o GraphQL, y la interfaz necesita cuatro operaciones (cargar, buscar, ver, recibir estados). Backend y frontend comparten tipos, límites y códigos. El contrato debe ser pequeño, fácil de probar y suficiente para un MVP.
 - **Decisión 1: API REST con JSON bajo `/api`, carga por `multipart/form-data`, y una carga por solicitud.**
   - **Frente a GraphQL:** con cuatro operaciones fijas no hay problema de sobre o subcarga de datos que resolver, y añadiría esquema, resolvedores y una segunda forma de manejar errores. La carga de archivos en GraphQL requiere además una especificación adicional.
@@ -724,7 +704,6 @@ packages/shared/            DTOs, DocumentStatus, códigos de error, contrato de
 
 ### ADR-12: Frontend
 
-- **Estado:** Accepted.
 - **Contexto:** la interfaz tiene tres tareas (cargar, buscar, leer) y una necesidad transversal (recibir estados en tiempo real, ADR-07). Los datos cambian por eventos, el contenido puede ser muy extenso (hasta 3 millones de caracteres, ADR-03) y el proyecto es un MVP con pruebas en Jest.
 - **Decisión 1: datos obtenidos en el cliente, contra el backend directamente.**
   - **Por qué:** el estado de un documento cambia mientras el usuario mira la pantalla (`PROCESANDO` a `INDEXADO`). Una página renderizada en servidor mostraría un estado que ya envejeció y habría que hidratarla y reconciliarla igualmente. No hay indexación por buscadores externos que justifique el renderizado en servidor, y evita un segundo camino de red (navegador a Next.js a backend).
@@ -750,7 +729,7 @@ frontend/src/
     lib/                  mensajes por código de error, utilidades
 ```
 
-  - **Por qué:** cada funcionalidad contiene sus componentes, hooks y pruebas; `shared` no depende de ninguna funcionalidad. Es la separación que se explica en un minuto y que el patrón contenedor y presentacional del catálogo aprovecha.
+  - **Por qué:** cada funcionalidad contiene sus componentes, hooks y pruebas; `shared` no depende de ninguna funcionalidad. La separación es simple de explicar y facilita la división entre componentes contenedores y presentacionales (sección 5.3).
 - **Decisión 4: seguimiento en tiempo real con una sola conexión `EventSource` en la raíz de la aplicación.**
   - **Flujo:** el proveedor abre `GET /api/events` (ADR-07) una vez por pestaña. Cada evento `document-status` actualiza la caché del documento y muestra un aviso. Al abrir o reabrir la conexión y ante el evento `resync`, se reconcilia consultando `GET /api/documents?ids=` con los documentos que siguen en `PROCESANDO`.
   - **Sin conexión de eventos:** se muestra un aviso ("sin actualizaciones en tiempo real") y se reconcilia al reconectar. No se sondea: el enunciado lo prohíbe.
@@ -772,14 +751,13 @@ frontend/src/
   - **Sin barra de progreso de subida:** `fetch` no informa del avance; la fila muestra `Enviando`. Evolución: `XMLHttpRequest` o un cliente con progreso.
   - **Sin listado de documentos:** el usuario llega a un documento por búsqueda o por el enlace de la cola de carga (ADR-11).
   - **Metadatos comunes por lote:** para metadatos distintos por archivo hay que hacer lotes separados. Evolución: edición por fila.
-  - **`react-markdown` es un módulo ES:** Jest puede necesitar configuración para transformarlo. Mitigación: probar el componente del visor con el módulo real usando la opción de transformación de `next/jest`, y reservar un doble solo para las pruebas de otros componentes. Se verifica al iniciar la implementación.
+  - **`react-markdown` es un módulo ES:** Jest puede necesitar configuración para transformarlo. Mitigación: probar el componente del visor con el módulo real mediante la opción de transformación de `next/jest`, y reservar un doble solo para las pruebas de otros componentes (sección 7.2).
   - **Un solo idioma y accesibilidad básica:** etiquetas asociadas a los campos y una región `role="status"` para anunciar los cambios de estado; sin revisión de accesibilidad completa.
 - **Evolución:** renderizado en servidor del detalle, persistencia del seguimiento, progreso de carga, edición por fila, virtualización del contenido y pruebas de extremo a extremo.
 
 ### ADR-13: Estrategia de pruebas, cobertura y benchmark
 
-- **Estado:** Accepted.
-- **Contexto:** el enunciado exige pruebas unitarias y de integración de los componentes críticos del backend, valora el manejo de la concurrencia en la defensa y pide una latencia de búsqueda de 400 ms a 1 s. El proyecto es un MVP de un día: las pruebas deben concentrarse donde un error cuesta más, no repartirse por igual.
+- **Contexto:** el enunciado exige pruebas unitarias y de integración de los componentes críticos del backend, da peso al manejo de la concurrencia y pide una latencia de búsqueda de 400 ms a 1 s. El proyecto es un MVP de un día: las pruebas deben concentrarse donde un error cuesta más, no repartirse por igual.
 - **Decisión 1: pirámide de pruebas con Jest, reglas críticas primero y sin dobles de la base de datos.**
   - **Unitarias (rápidas, sin red ni base de datos):** dominio y casos de uso del backend con dobles en memoria de los puertos (ADR-09), esquemas y utilidades de `packages/shared`, y lógica pura del frontend.
   - **Integración (base de datos real):** repositorio, adaptador de búsqueda, cola, puente de eventos y API HTTP con `supertest`. Se usa PostgreSQL real porque los riesgos del diseño viven en el motor: índice único de la huella, transición condicionada, transacciones y configuración de búsqueda. Un doble de Drizzle probaría el doble, no el motor.
@@ -819,13 +797,12 @@ frontend/src/
   - **Las pruebas de integración requieren la base de datos en marcha** (`docker compose up`). Alternativa hermética descartada para el MVP: contenedores efímeros por ejecución, que añaden una dependencia y tiempo de arranque.
   - **Ejecución en serie de la integración:** más lenta que en paralelo, pero sin interferencia entre pruebas sobre la misma base.
   - **Sin integración continua:** las pruebas se ejecutan en local. Evolución: flujo de trabajo de CI con la base de datos como servicio.
-  - **El benchmark no cubre concurrencia alta ni volúmenes de decenas de miles de documentos:** se declara en la evidencia; el capítulo de escalabilidad describe la evolución (capa de candidatos, chunks).
+  - **El benchmark no cubre concurrencia alta ni volúmenes de decenas de miles de documentos:** se declara en la evidencia; la sección 8 describe la evolución (capa de candidatos, chunks).
   - **Los umbrales de cobertura son valores iniciales** de criterio, no derivados de datos.
 - **Evolución:** pruebas de extremo a extremo, CI, pruebas de carga sostenida con más concurrencia y pruebas de mutación sobre el dominio.
 
 ### ADR-14: Seguridad y manejo de errores
 
-- **Estado:** Accepted.
 - **Contexto:** el enunciado pide manejo de errores con filtros o middleware, validación de datos y variables de entorno en `.env`. No pide autenticación. La demostración es local y de un solo usuario. Las medidas de seguridad deben ser proporcionales: baratas, estándar y verificables.
 - **Supuesto declarado:** el MVP no incluye autenticación ni autorización. Cualquiera con acceso a la API puede cargar, buscar y leer. Es una decisión de alcance, no un olvido, y se documenta como trade-off.
 - **Decisión 1: un único filtro global de excepciones que traduce cualquier error al formato de ADR-11.**
@@ -835,7 +812,7 @@ frontend/src/
   - **Frente a `try/catch` en cada controlador:** una sola política, sin errores olvidados ni formatos distintos, y probable con una sola prueba por código.
 - **Decisión 2: validación en la frontera y configuración validada al arrancar.**
   - **Solicitudes:** los esquemas Zod de `packages/shared` (ADR-11), en modo estricto: un campo desconocido se rechaza con `400` en lugar de ignorarse.
-  - **Configuración:** un esquema Zod valida las variables de entorno al arrancar (E-29). Si alguna falta o es inválida, el proceso termina de inmediato y lista los nombres de todas las variables incorrectas, sin mostrar valores. Cubre también el invariante `PAGE_SIZE x MAX_INDEXABLE_CHARS <= 3.000.000` (ADR-03).
+  - **Configuración:** un esquema Zod valida las variables de entorno al arrancar (E-29). Si alguna falta o es inválida, el proceso termina de inmediato y lista los nombres de todas las variables incorrectas, sin mostrar valores. Cubre también el invariante `PAGE_SIZE x MAX_INDEXABLE_CHARS <= 3.000.000` y que `MAX_HIGHLIGHT_CHARS` no supere `MAX_INDEXABLE_CHARS` (ADR-03).
 - **Decisión 3: controles de seguridad estándar de bajo costo.**
   - **Cabeceras de seguridad de la API:** `helmet` con sus valores por defecto.
   - **CORS:** necesario incluso en local, porque el navegador trata `localhost:3000` (frontend) y `localhost:3001` (API) como orígenes distintos y bloquearía las llamadas y el `EventSource`. Se habilita un único origen, `CORS_ORIGIN` (por defecto `http://localhost:3000`, no requiere configuración), sin comodín y sin credenciales (no hay cookies ni sesión). La aplicación debe abrirse en `http://localhost:3000`: `http://127.0.0.1:3000` es otro origen. Alternativa descartada: servir todo desde un mismo origen con un proxy de Next.js, que contradice ADR-07 (el proxy puede almacenar en búfer el flujo SSE) y dejaría sin medir ese riesgo.
@@ -859,6 +836,7 @@ frontend/src/
 | `MAX_PDF_PAGES` | 1000 | ADR-03 |
 | `MAX_EXTRACTED_CHARS` | 3000000 | ADR-03 |
 | `MAX_INDEXABLE_CHARS` | 300000 | ADR-03 |
+| `MAX_HIGHLIGHT_CHARS` | 100000 (no mayor que `MAX_INDEXABLE_CHARS`) | ADR-03 |
 | `EXTRACTION_TIMEOUT_MS` | 60000 | ADR-03 |
 | `WORKER_CONCURRENCY` | 2 | ADR-03 |
 | `JOB_RETRY_LIMIT` | 3 | ADR-08 |
@@ -879,7 +857,6 @@ frontend/src/
 
 ### ADR-15: Entorno local y docker-compose
 
-- **Estado:** Accepted.
 - **Contexto:** el `docker-compose.yml` es deseable, no obligatorio. La demostración es local, de una sola máquina, y quien evalúe debe poder levantar el sistema con pocos pasos. La base de datos es la única pieza de infraestructura del diseño (ADR-03, ADR-04, ADR-07): no hay Redis, broker ni motor de búsqueda.
 - **Decisión 1: `docker-compose.yml` solo con PostgreSQL; backend y frontend corren en el host.**
   - **Servicio:** `postgres:17-alpine`, la misma versión e imagen con la que se hicieron todas las mediciones (ADR-03, ADR-07), con la configuración por defecto. Volumen con nombre para la persistencia y verificación de salud con `pg_isready`, de modo que `docker compose up -d --wait` solo termina cuando la base acepta conexiones. El usuario, la contraseña y la base salen del `.env`.
@@ -901,61 +878,75 @@ frontend/src/
   - **PostgreSQL con la configuración por defecto:** las mediciones se hicieron así. Ajustar `shared_buffers` o `work_mem` mejoraría la latencia y queda como evolución.
   - **Sin copias de seguridad:** el volumen local es de demostración.
   - **Migraciones manuales:** un desarrollador que olvide ejecutarlas recibe el mensaje de arranque, no una migración automática.
-  - **Una sola máquina:** los roles `api` y `worker` se separan en procesos distintos solo como evolución (capítulo de escalabilidad).
+  - **Una sola máquina:** los roles `api` y `worker` se separan en procesos distintos solo como evolución (sección 8).
 - **Evolución:** imágenes por rol (`api`, `worker`), migraciones como paso previo de despliegue, PostgreSQL administrado y balanceador delante de varias instancias de API.
 
 ---
 
-## 5. Catálogo de patrones de diseño
+## 5. Patrones de diseño, estilos y prácticas
 
-Estado: Accepted. Cada patrón indica dónde se aplica y por qué. También se documentan los patrones descartados para justificar la proporcionalidad.
+Esta sección separa tres cosas que suelen mezclarse. Un **patrón de diseño** es una solución con nombre en un catálogo reconocido (GoF, Fowler en *Patterns of Enterprise Application Architecture* o *Enterprise Integration Patterns*). Un **estilo arquitectónico** define la forma general del sistema. Una **práctica** es una técnica o una decisión de organización que no es un patrón catalogado. Solo se listan como patrones los que existen en el código y cumplen esa definición.
 
-### 5.1 Backend
+### 5.1 Patrones de diseño aplicados
 
-| Patrón | Dónde | Problema que resuelve | Estado |
+#### Backend
+
+| Patrón | Catálogo | Dónde está en el código | Problema que resuelve |
 | :-- | :-- | :-- | :-- |
-| Arquitectura Hexagonal (Puertos y Adaptadores) | Módulo `documents` (núcleo) | Aislar el dominio de la base de datos, la cola, el almacenamiento y el motor de búsqueda; permite sustituir adaptadores y probar con mocks | Accepted (ADR-09) |
-| Inyección de dependencias con tokens (DIP) | Todos los módulos | Depender de abstracciones; los casos de uso reciben puertos, no implementaciones | Accepted (ADR-09) |
-| CQRS ligero (sin librería) | `documents` (comandos) y `search` (consultas) | Separar el camino de escritura del de lectura con requisitos de rendimiento distintos | Accepted (ADR-01) |
-| Strategy con registro | `TextExtractorPort`: una estrategia por formato (TXT, Markdown, PDF) | Abierto a extensión (nuevo formato sin modificar el orquestador) | Accepted (ADR-09) |
-| Strategy intercambiable (`ChunkingStrategy`) | Indexación de contenido: hoy un solo fragmento con tope; a futuro fragmentación en chunks | Permite evolucionar la indexación sin cambiar la API ni el frontend (ADR-03) | Accepted (ADR-03, ADR-09) |
-| Validaciones ordenadas de la carga (variante ligera de Chain of Responsibility) | Carga: tamaño, tipo real por contenido, metadatos, duplicados | Cada validación con una única responsabilidad, ordenable y probable de forma aislada | Accepted (ADR-06, ADR-10, ADR-11) |
-| Máquina de estados explícita | Agregado `Document`: `PROCESANDO` a `INDEXADO` o `ERROR` | Impedir transiciones inválidas y garantizar idempotencia (no es el State de GoF completo, por proporcionalidad) | Accepted (ADR-08) |
-| Factory Method | `Document.create(...)` | Garantizar invariantes de creación (estado inicial, identificador, huella del contenido) | Accepted (ADR-09) |
-| Repository | Persistencia de `Document` | Abstraer el acceso a datos detrás de un puerto | Accepted (ADR-09) |
-| Unit of Work | `UnitOfWork.run` con `TransactionContext` opaco | Que documento, trabajo, contenido y notificación compartan transacción sin acoplar el dominio a Drizzle (ADR-08, ADR-09) | Accepted (ADR-08, ADR-09) |
-| Adapter | Cada librería externa (extracción de PDF, cliente de cola, almacenamiento) | Aislar el código de terceros en la frontera | Accepted (ADR-09) |
-| Productor-Consumidor con consumidores competitivos | Cola de procesamiento | Absorber picos de carga y escalar workers horizontalmente | Accepted (ADR-04) |
-| Publicador-Suscriptor (Observer distribuido) | Bus de eventos hacia el canal SSE | Desacoplar el worker de las conexiones de clientes y soportar varias instancias | Accepted (ADR-07) |
-| Idempotencia por clave natural | Identificador del trabajo igual al identificador del documento; huella SHA-256 del contenido | Reprocesar o duplicar mensajes no genera efectos duplicados | Accepted (ADR-06, ADR-08) |
-| Mapper / DTO en el borde | Controladores y adaptadores | Evitar filtrar entidades de persistencia al contrato de la API | Accepted (ADR-09, ADR-11) |
-| Filtro global de excepciones y pipe de validación con esquemas compartidos | Transversal (NestJS) | Errores estructurados sin detalles internos y validación declarativa | Accepted (ADR-14) |
-| Reintento con backoff exponencial | Worker | Tolerar fallos transitorios sin intervención manual | Accepted (ADR-08) |
+| Repository | Fowler (PoEAA) | Puerto `DocumentRepository` en `documents/domain` e implementación `DrizzleDocumentRepository`; puerto `SearchRepository` e implementación `PostgresSearchRepository` en `search` | Los casos de uso no conocen SQL ni Drizzle y se prueban con repositorios en memoria |
+| Unit of Work (versión simplificada) | Fowler (PoEAA) | Puerto `UnitOfWork` y `DrizzleUnitOfWork` con `TransactionContext` opaco | Repositorio, cola y publicador de eventos comparten una sola transacción sin acoplar el dominio a Drizzle. Delimita la transacción; no rastrea cambios de objetos como el patrón completo |
+| Adapter | GoF | `PdfTextExtractor` (pdfjs-dist), `PgBossJobQueue` (pg-boss), `DiskFileStorage` y `PgNotifyEventPublisher`, cada uno tras un puerto del dominio | El código de cada librería o recurso externo queda aislado en la frontera y es sustituible |
+| Strategy | GoF | `FormatExtractor` con una estrategia por formato (`PlainTextExtractor`, `PdfTextExtractor`), elegida por `CompositeTextExtractor`, que funciona como registro de formato a estrategia; `ChunkingStrategy` con `PrefixChunkingStrategy` | Añadir un formato o cambiar la forma de indexar no modifica el orquestador |
+| Observer | GoF | `EventHub`: los clientes SSE se suscriben y reciben cada cambio de estado | El origen de los eventos no conoce a los clientes conectados |
+| Publish-Subscribe Channel | Enterprise Integration Patterns | `pg_notify` dentro de la transacción del worker y `LISTEN` en `PgListenEventSource` de la API | El worker y las instancias de API se comunican sin conocerse, y el evento solo se entrega si la transacción confirma |
+| Competing Consumers | Enterprise Integration Patterns | Consumidores concurrentes de la cola `documents.index` con `pg-boss` (`SKIP LOCKED`) | Absorber picos de carga y escalar el procesamiento añadiendo consumidores |
+| Idempotent Receiver | Enterprise Integration Patterns | Transición condicionada de estado en `DrizzleDocumentRepository` (`UPDATE ... WHERE status = 'PROCESANDO'`): si afecta cero filas, el trabajo se descarta | Una entrega duplicada o un reintento no produce efectos duplicados |
+| Data Transfer Object | Fowler (PoEAA) | Esquemas de `packages/shared` que definen el contrato de la API y de los eventos | Las entidades de persistencia no se filtran al contrato y ambos extremos comparten los mismos tipos |
 
-Descartados de forma deliberada:
+#### Frontend
 
-- Saga y consistencia distribuida: no hay varios servicios con transacciones que coordinar.
-- Event Sourcing: complejidad sin beneficio para el alcance.
-- Circuit Breaker: no hay dependencias de terceros remotas; los reintentos con backoff son suficientes.
-- Value Objects completos para cada concepto de valor: se valida en el borde con esquemas declarativos, (trade-off aceptado y documentado).
-- Caché de consultas: es una palanca de escalabilidad documentada, no se implementa en el alcance actual.
-
-### 5.2 Frontend
-
-| Patrón | Dónde | Problema que resuelve | Estado |
+| Patrón | Catálogo | Dónde está en el código | Problema que resuelve |
 | :-- | :-- | :-- | :-- |
-| Organización por funcionalidad | `features/upload`, `features/search`, `features/viewer`, `features/notifications`; componentes reutilizables en `shared/ui` (Atomic Design descartado por desproporcionado en un MVP) | Límites claros por capacidad y reutilización visual | Accepted (ADR-12) |
-| Contenedor / Presentacional | Páginas conectan datos; componentes solo presentan | Componentes sin lógica de negocio, fáciles de probar | Accepted (ADR-12) |
-| Adapter / Gateway de API | Cliente HTTP tipado con contratos de `packages/shared` | Aislar la comunicación con el backend | Accepted (ADR-12) |
-| Observer sobre `EventSource` (hook personalizado) | Conexión SSE global de la aplicación | Un único canal reactivo, con reconexión y reconciliación | Accepted (ADR-07) |
-| Estado de servidor con caché (TanStack Query) | Búsqueda, detalle y estados, actualizados por eventos SSE | Interfaz reactiva sin polling | Accepted (ADR-12) |
-| Búsqueda al enviar, con estado en la URL | Campo de búsqueda | Evitar consultas descartadas por pulsación de tecla y permitir enlaces (sustituye al debounce, ADR-12) | Accepted (ADR-12) |
+| Gateway | Fowler (PoEAA) | Interfaz `ApiClient` y `createApiClient` en `shared/api/client.ts` | Las pantallas no conocen HTTP ni el formato de error; en las pruebas se sustituye por un doble |
+| Observer | GoF | `StatusStore` y la cola de carga exponen `subscribe` y se conectan a React con `useSyncExternalStore` | Las vistas se actualizan cuando cambia el estado de un documento, sin sondeo |
+
+### 5.2 Estilos arquitectónicos
+
+- **Arquitectura hexagonal (puertos y adaptadores).** Completa en el módulo `documents`, ligera en `search` y `notifications` (ADR-09).
+- **Monolito modular con dos roles de ejecución** (`api` y `worker`) sobre el mismo artefacto (ADR-01).
+- **CQRS ligero, sin librería.** Los comandos viven en `documents` y las consultas en `search`, que lee con sus propias sentencias (ADR-01).
+
+### 5.3 Principios y prácticas
+
+Son decisiones de organización o técnicas que no se presentan como patrones de diseño.
+
+| Práctica | Dónde | Para qué |
+| :-- | :-- | :-- |
+| Inyección de dependencias con tokens (principio de inversión de dependencias) | Todos los módulos NestJS | Los casos de uso reciben puertos, no implementaciones (ADR-09) |
+| Método de creación estático con invariantes (`Document.create`) | Dominio de `documents` | Garantizar el estado inicial, la huella y el nombre saneado desde el momento de la creación |
+| Máquina de estados finita con tabla de transiciones | `Document`: `PROCESANDO` a `INDEXADO` o `ERROR` | Impedir transiciones inválidas. No implementa el patrón State de GoF: las transiciones son datos, no objetos por estado |
+| Validaciones secuenciales de la carga | `UploadDocument` y el interceptor de carga: tamaño, tipo real por contenido, metadatos y duplicados | Cada regla con una responsabilidad y probable de forma aislada. No es una cadena de responsabilidad formal |
+| Reintento con backoff exponencial | Configuración de la cola `pg-boss` para el worker | Tolerar fallos transitorios sin intervención manual (ADR-08) |
+| Filtro global de excepciones y validación con esquemas compartidos | Transversal en NestJS | Errores estructurados sin detalles internos y validación declarativa (ADR-14) |
+| Organización por funcionalidad | Frontend: `features/upload`, `features/search`, `features/viewer`, `features/notifications`; componentes reutilizables en `shared/ui` | Límites claros por capacidad (ADR-12) |
+| Componentes contenedores y presentacionales | Frontend: las páginas conectan los datos y los componentes presentan | Componentes sin lógica de negocio, fáciles de probar (ADR-12) |
+| Estado del servidor con caché (TanStack Query) | Búsqueda, detalle y estados | Interfaz reactiva sin polling (ADR-12) |
+| Búsqueda al enviar, con el estado en la URL | Campo de búsqueda | Evitar consultas descartadas por pulsación de tecla y permitir enlaces (ADR-12) |
+
+### 5.4 Patrones considerados y no aplicados
+
+- **Saga y consistencia distribuida:** no hay varios servicios con transacciones que coordinar.
+- **Event Sourcing:** complejidad sin beneficio para el alcance.
+- **Transactional Outbox:** el único consumidor del evento es la interfaz, que reconcilia por consulta (ADR-08).
+- **Circuit Breaker:** no hay dependencias remotas de terceros; los reintentos con backoff bastan.
+- **Value Objects para cada concepto:** se valida en el borde con esquemas declarativos; es un compromiso aceptado y documentado.
+- **Caché de consultas:** es una palanca de escalabilidad documentada, no se implementa en el alcance actual.
 
 ---
 
 ## 6. Catálogo de casos de borde
 
-Estado: definidos y documentados. Aún no se revisan técnicamente a nivel de código ni se implementan. Los que dependen de una decisión pendiente están marcados.
+Cada caso tiene un identificador estable. Las pruebas del backend y del frontend llevan en su nombre el identificador del caso que verifican, lo que permite rastrear este catálogo hasta el código.
 
 ### 6.1 Carga (HU-01)
 
@@ -1065,14 +1056,14 @@ Resumen de lo que el MVP sacrifica de forma deliberada. El detalle y la justific
 | Seguridad | Sin autenticación ni autorización; sin límite de solicitudes; sin cifrado en reposo; sin CSP; registro sin estructura | Demostración local de un solo usuario; validación de entrada, cabeceras, CORS y errores sin fugas sí están | Autenticación con tokens; limitación de solicitudes con almacén compartido; CSP con nonces; registro estructurado | 14 |
 | Entorno | Backend y frontend sin contenerizar; PostgreSQL con configuración por defecto; sin copias de seguridad; migraciones manuales | No se construyen imágenes en un MVP de un día; las mediciones se hicieron con esa configuración | Imágenes por rol; migraciones como paso de despliegue; PostgreSQL administrado | 15 |
 
-### 7.2 Riesgos técnicos a verificar al iniciar la implementación
+### 7.2 Riesgos técnicos identificados y su estado
 
-| Riesgo | Mitigación prevista | Se verifica |
+| Riesgo | Mitigación | Estado |
 | :-- | :-- | :-- |
-| `pdfjs-dist` es un módulo ES y Jest en CommonJS puede exigir configuración | El adaptador queda tras el puerto; los casos de uso usan un extractor falso; el adaptador se prueba con PDF reales | Primer día, antes de escribir el extractor |
-| `react-markdown` es un módulo ES y Jest puede necesitar transformación | Opción de transformación de `next/jest`; el doble solo en pruebas de otros componentes | Al escribir el visor |
-| La primera búsqueda con caché fría llegó a p95 de 787 ms | Búsqueda de calentamiento antes de la demostración (ADR-15) | En el benchmark y en el ensayo de la demostración |
-| La búsqueda sobre el conjunto de 5.000 documentos aún no se ha medido por la API | Benchmark `npm run bench:search` con criterio de aceptación p95 de 1.000 ms | Al terminar la implementación |
+| `pdfjs-dist` es un módulo ES y el código del backend se compila a CommonJS, donde Jest no lo carga sin configuración | El adaptador queda tras el puerto; un ayudante de importación dinámica (`shared-kernel/dynamic-import.ts`) carga los módulos ES; los casos de uso se prueban con un extractor falso | Resuelto: cubierto por las pruebas unitarias y de integración del backend |
+| `react-markdown` es un módulo ES y Jest necesita transformarlo | La configuración de Jest del frontend transforma `react-markdown` y sus dependencias; el visor se prueba con el módulo real | Resuelto: cubierto por las pruebas del frontend |
+| La primera búsqueda con la caché fría llegó a p95 de 787 ms en la base de datos | Búsqueda de calentamiento antes de la demostración (ADR-15) | Mitigado: en el benchmark de la API el peor p95 es 491,7 ms; el calentamiento sigue siendo parte de la preparación de la demostración |
+| La búsqueda por la API con 5.000 documentos no se había medido | `npm run bench:search` con criterio de aceptación de p95 de 1.000 ms | Resuelto: la primera corrida no cumplía; tras corregir el uso del índice y acotar el resaltado (ADR-03), el peor p95 es 491,7 ms |
 
 ### 7.3 Valores de criterio, no medidos
 
@@ -1082,7 +1073,7 @@ Estos valores son decisiones de ingeniería razonables, no resultados de medici�
 
 ## 8. Escalabilidad ante un aumento masivo de documentos
 
-El enunciado pide explicar cómo escala el sistema si el número de documentos crece de forma masiva. Este capítulo separa lo que está medido de lo que es extrapolación, identifica qué se rompe primero y describe la evolución por etapas. La escalabilidad ya está prevista en el diseño mediante puertos, roles y consumidores competitivos; ninguna etapa exige reescribir el dominio, la API ni el frontend.
+El enunciado pide explicar cómo escala el sistema si el número de documentos crece de forma masiva. Esta sección separa lo que está medido de lo que es extrapolación, identifica qué se rompe primero y describe la evolución por etapas. La escalabilidad ya está prevista en el diseño mediante puertos, roles y consumidores competitivos; ninguna etapa exige reescribir el dominio, la API ni el frontend.
 
 ### 8.1 Punto de partida medido
 
@@ -1090,7 +1081,8 @@ El enunciado pide explicar cómo escala el sistema si el número de documentos c
 | :-- | :-- | :-- |
 | Búsqueda con 1.500 documentos de 300.000 caracteres (peor caso) | p95 de 476 a 554 ms con caché caliente, máximo de 617 ms; primera consulta con caché fría, 787 ms | ADR-03, `docs/evidence/fts-capacity/` |
 | Tamaño en el peor caso | Vector de 81 kB por documento; índice GIN de 14 MB para 1.500 documentos | ADR-03 |
-| Costo del resaltado | 31 ms por documento de 300.000 caracteres; una página de 10 cuesta unos 310 ms, constante respecto al tamaño del corpus | ADR-03 |
+| Costo del resaltado | 31 ms por documento de 300.000 caracteres; una página de 10 cuesta unos 310 ms sin ventana, constante respecto al tamaño del corpus. Con `MAX_HIGHLIGHT_CHARS` de 100.000 baja alrededor de un 45 % con términos frecuentes | ADR-03 |
+| Búsqueda por la API con 5.000 documentos de perfil mixto | Peor p95 de 491,7 ms con 5 clientes y de 342,3 ms con 1; consulta sin resultados de 4,6 ms. Antes de corregir el uso del índice: peor p95 de 1.242,7 ms | ADR-03, `docs/evidence/api-benchmark/` |
 | Extracción de PDF | 1.000 páginas en 2,5 a 3,2 s con 166 MB de pico; bloqueo máximo del ciclo de eventos de 25 a 94 ms | ADR-10, `docs/evidence/upload-limits/` |
 | Tiempo real | p95 de 7 ms con 1 cliente, de 13 a 15 ms con 100 y de 97 a 162 ms con 1.000, sin pérdidas | ADR-07, `docs/evidence/realtime-latency/` |
 | Volumen probado | Entre 900 y 4.000 documentos; no se ha probado un volumen de decenas de miles | ADR-03 (limitaciones de la evidencia) |
@@ -1156,14 +1148,9 @@ El MVP no incluye métricas ni alertas (ADR-14). Para operar con volumen habría
 
 | Afirmación | Respaldo |
 | :-- | :-- |
-| La búsqueda cumple p95 menor o igual a 1.000 ms con 1.500 documentos en el peor caso | Medido (ADR-03); el benchmark de la API con 5.000 documentos confirmará el camino completo (ADR-13) |
-| La latencia del resaltado no crece con el corpus | Derivado de la medición: está acotada por `PAGE_SIZE x MAX_INDEXABLE_CHARS` |
+| La búsqueda cumple p95 menor o igual a 1.000 ms con 1.500 documentos en el peor caso | Medido (ADR-03) |
+| La búsqueda por la API cumple p95 menor o igual a 1.000 ms con 5.000 documentos de perfil mixto y 1 o 5 clientes | Medido en una máquina y una corrida (peor p95 de 491,7 ms); la primera corrida no cumplía y se corrigió (ADR-03, `docs/evidence/api-benchmark/`) |
+| La latencia del resaltado no crece con el corpus | Derivado de la medición: está acotada por `PAGE_SIZE x MAX_HIGHLIGHT_CHARS` |
 | El worker escala horizontalmente sin cambiar el dominio | Diseño (consumidores competitivos con `SKIP LOCKED`, transición condicionada y manejadores idempotentes, ADR-04 y ADR-08); la concurrencia entre dos workers se verifica en integración (E-39) |
 | El sistema soporta cientos de miles de documentos sin cambios | No afirmado: sin medición; la proyección de 8.2 solo dimensiona la memoria |
 | El tiempo real soporta 1.000 clientes simultáneos | Medido con clientes y servidor en el mismo proceso; conservador |
-
----
-
-## 9. Secciones pendientes de redacción
-
-- Aprobación global del documento. La revisión de coherencia entre ADR, catálogos, vistas y capítulos está hecha (ver `docs/ia.md`, sección 5.2).
