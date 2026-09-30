@@ -1,0 +1,13 @@
+@import 'tailwindcss';
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+mark {
+  @apply rounded-sm bg-amber-200 px-0.5 text-slate-900;
+}
