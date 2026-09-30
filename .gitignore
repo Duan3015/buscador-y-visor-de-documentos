@@ -23,3 +23,6 @@ Thumbs.db
 
 # Enunciado original de la prueba (documento del evaluador, no se publica)
 KATA*.pdf
+
+# Generado por Next.js
+next-env.d.ts
