@@ -1,2 +1,2 @@
-﻿# Los PDF de prueba llevan posiciones internas en bytes: no deben convertirse de saltos de linea.
+# Los PDF de prueba llevan posiciones internas en bytes: no deben convertirse de saltos de linea.
 *.pdf binary
