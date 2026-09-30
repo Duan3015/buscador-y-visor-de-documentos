@@ -22,7 +22,7 @@ Un solo PostgreSQL cubre datos, indice de busqueda, cola y notificaciones. El ba
 
 ## Requisitos previos
 
-- Node.js y npm instalados.
+- Node.js 22.13 o superior y npm. Compruebe la version activa con `node -v`: con una version anterior la instalacion advierte o el backend no arranca.
 - Docker con Docker Compose (solo para PostgreSQL).
 
 ## Puesta en marcha
