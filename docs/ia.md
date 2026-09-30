@@ -80,6 +80,7 @@ Los prompts se reproducen de forma literal o resumida. La columna final muestra 
 | Casos de borde y catálogo con texto de decisiones anteriores (codificación no UTF-8, tamaño de página configurable, estado de patrones) | Revisión final de coherencia | Corregidos en las secciones 5 y 6 de `architecture.md` |
 | Cifras de una prueba con 1.000 clientes SSE rechazadas por ráfaga de conexiones | Fallo `ECONNREFUSED` durante la medición | Conexiones en lotes de 50; documentado en la evidencia |
 | Texto con acentos corrompido al enviar SQL por la tubería de PowerShell | Salida con caracteres erróneos | Envío del archivo al contenedor y ejecución con `psql -f` |
+| ADR-03 y la consulta de búsqueda asumieron que el índice GIN se usaba, sin revisar el plan de ejecución; en realidad el planificador recorría toda la tabla y la búsqueda no cumplía p95 menor o igual a 1.000 ms con 5 clientes (1.242,7 ms) | Benchmark de la API con 5.000 documentos; una consulta sin resultados costaba unos 157 ms, incompatible con un índice usado | Consulta reestructurada, `SET LOCAL enable_seqscan = off`, resaltado limitado a `MAX_HIGHLIGHT_CHARS`, pruebas de integración con `EXPLAIN` y nueva corrida (peor p95 de 491,7 ms). Detalle en `docs/evidence/api-benchmark/` |
 
 ### 5.3 Controles aplicados a la salida de la IA
 
@@ -88,13 +89,19 @@ Los prompts se reproducen de forma literal o resumida. La columna final muestra 
 - **Sintaxis verificada por herramienta:** los diagramas Mermaid se validaron con el analizador oficial; no se revisaron visualmente en un visor.
 - **Coherencia entre secciones:** revisión cruzada de ADR, catálogo de patrones, casos de borde, vistas y capítulos antes de la aprobación global.
 
-## 6. Implementación (se completa al generar el código)
+## 6. Implementación
 
-El código lo generará la IA bajo el mismo protocolo. Para cada módulo, el responsable validará antes de aceptarlo:
+El código lo generó la IA bajo el mismo protocolo. Para cada módulo, el responsable valida antes de aceptarlo:
 
 1. Que cumpla el ADR correspondiente y la checklist de la prueba.
 2. Que tenga sus pruebas (unitarias con dobles en memoria e integración con PostgreSQL real, ADR-13) y que estas pasen.
 3. Que los casos de borde del catálogo tengan una prueba trazable por identificador.
 4. Que no se añadan dependencias ni funciones fuera de alcance.
 
-Esta sección se completará con los prompts de implementación, las correcciones realizadas al código generado y los resultados del benchmark de la API.
+### 6.1 Verificación del código generado y del benchmark de la API
+
+- **Pruebas:** al cierre de esta corrección, 216 pruebas unitarias del backend, 142 del frontend y 4 archivos de integración contra PostgreSQL real, todos en verde.
+- **Benchmark de la API (ADR-13):** la primera corrida no cumplió el criterio (peor p95 de 1.242,7 ms con 5 clientes). El responsable aprobó, una por una, las dos correcciones propuestas por la IA: reestructurar la consulta para usar el índice y limitar la ventana de resaltado a 100.000 caracteres (nuevo límite documentado en ADR-03). La segunda corrida cumple (peor p95 de 491,7 ms). Ambas corridas y el diagnóstico están en `docs/evidence/api-benchmark/`; los resultados crudos conservados corresponden solo a la segunda.
+- **Incidencia de la carga:** el cargador del benchmark agotó su espera fija de 30 minutos con 5.000 documentos; la medición se ejecutó con `--skip-load` una vez indexados. Queda pendiente decidir si la espera se hace proporcional al volumen.
+- **Cambio con prueba asociada:** la corrección de la consulta incluye una prueba de integración que falla si el plan de ejecución deja de usar el índice, para que esta clase de regresión no dependa del benchmark.
+- **Prompts de implementación:** no se detallan aquí uno por uno; el historial de decisiones aprobadas está en la sección 5.1.

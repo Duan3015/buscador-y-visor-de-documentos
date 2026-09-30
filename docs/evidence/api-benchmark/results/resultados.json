@@ -1,0 +1,257 @@
+{
+  "generatedAt": "2026-09-30T03:03:03.541Z",
+  "apiUrl": "http://localhost:3001/api",
+  "dataset": {
+    "count": 5000,
+    "profile": "mixed",
+    "load": null
+  },
+  "parameters": {
+    "samplesPerQuery": 100,
+    "warmupPerQuery": 10,
+    "concurrencies": [
+      1,
+      5
+    ]
+  },
+  "machine": {
+    "platform": "win32 10.0.26100",
+    "arch": "x64",
+    "cpuModel": "12th Gen Intel(R) Core(TM) i5-12450H",
+    "logicalCores": 12,
+    "memoryGb": 24
+  },
+  "verdict": {
+    "thresholdMs": 1000,
+    "passed": true,
+    "worstP95Ms": 491.652700000006,
+    "worstLabel": "frase entre comillas",
+    "worstConcurrency": 5
+  },
+  "queries": [
+    {
+      "label": "palabra frecuente",
+      "q": "caballero",
+      "page": 1,
+      "concurrency": 1,
+      "total": 2288,
+      "summary": {
+        "count": 100,
+        "min": 236.3853999999992,
+        "p50": 248.67799999999988,
+        "p95": 296.2579000000005,
+        "p99": 320.41010000000097,
+        "max": 327.59409999999843,
+        "mean": 255.56704899999994
+      }
+    },
+    {
+      "label": "palabra rara",
+      "q": "aldonza",
+      "page": 1,
+      "concurrency": 1,
+      "total": 115,
+      "summary": {
+        "count": 100,
+        "min": 104.11339999999836,
+        "p50": 108.01610000000073,
+        "p95": 132.81880000000092,
+        "p99": 154.76019999999698,
+        "max": 158.22249999999985,
+        "mean": 111.36762599999918
+      }
+    },
+    {
+      "label": "frase entre comillas",
+      "q": "\"don quijote\"",
+      "page": 1,
+      "concurrency": 1,
+      "total": 1504,
+      "summary": {
+        "count": 100,
+        "min": 286.7042999999976,
+        "p50": 300.3941999999952,
+        "p95": 342.2699000000066,
+        "p99": 372.92549999999756,
+        "max": 373.81039999999484,
+        "mean": 306.22749200000004
+      }
+    },
+    {
+      "label": "con tilde",
+      "q": "ínsula",
+      "page": 1,
+      "concurrency": 1,
+      "total": 578,
+      "summary": {
+        "count": 100,
+        "min": 162.69749999999476,
+        "p50": 169.71379999999772,
+        "p95": 198.38780000001134,
+        "p99": 230.4822000000131,
+        "max": 351.72690000000875,
+        "mean": 176.83135600000068
+      }
+    },
+    {
+      "label": "varias palabras",
+      "q": "amor tiempo caballero",
+      "page": 1,
+      "concurrency": 1,
+      "total": 1416,
+      "summary": {
+        "count": 100,
+        "min": 255.46620000000985,
+        "p50": 265.71540000000095,
+        "p95": 318.09330000000773,
+        "p99": 354.69360000001325,
+        "max": 373.08630000000994,
+        "mean": 271.90829599999995
+      }
+    },
+    {
+      "label": "sin resultados",
+      "q": "xyzzyplugh",
+      "page": 1,
+      "concurrency": 1,
+      "total": 0,
+      "summary": {
+        "count": 100,
+        "min": 3.9135999999998603,
+        "p50": 4.602899999998044,
+        "p95": 6.05460000000312,
+        "p99": 6.620100000000093,
+        "max": 11.220300000000861,
+        "mean": 4.77356499999878
+      }
+    },
+    {
+      "label": "pagina profunda (20)",
+      "q": "caballero",
+      "page": 20,
+      "concurrency": 1,
+      "total": 2288,
+      "summary": {
+        "count": 100,
+        "min": 191.8637999999919,
+        "p50": 203.9993000000104,
+        "p95": 230.85700000001816,
+        "p99": 256.0261000000173,
+        "max": 276.5957000000053,
+        "mean": 207.87757800000094
+      }
+    },
+    {
+      "label": "palabra frecuente",
+      "q": "caballero",
+      "page": 1,
+      "concurrency": 5,
+      "total": 2288,
+      "summary": {
+        "count": 100,
+        "min": 283.6505000000179,
+        "p50": 329.7624000000069,
+        "p95": 396.4994000000006,
+        "p99": 447.2396000000008,
+        "max": 457.0635000000184,
+        "mean": 336.1756480000017
+      }
+    },
+    {
+      "label": "palabra rara",
+      "q": "aldonza",
+      "page": 1,
+      "concurrency": 5,
+      "total": 115,
+      "summary": {
+        "count": 100,
+        "min": 123.52569999999832,
+        "p50": 151.34189999999944,
+        "p95": 166.23380000001634,
+        "p99": 173.97949999998673,
+        "max": 179.12709999998333,
+        "mean": 150.31888000000063
+      }
+    },
+    {
+      "label": "frase entre comillas",
+      "q": "\"don quijote\"",
+      "page": 1,
+      "concurrency": 5,
+      "total": 1504,
+      "summary": {
+        "count": 100,
+        "min": 363.8363000000245,
+        "p50": 405.2209000000148,
+        "p95": 491.652700000006,
+        "p99": 503.66479999999865,
+        "max": 507.8892999999807,
+        "mean": 415.5042159999983
+      }
+    },
+    {
+      "label": "con tilde",
+      "q": "ínsula",
+      "page": 1,
+      "concurrency": 5,
+      "total": 578,
+      "summary": {
+        "count": 100,
+        "min": 199.39919999998529,
+        "p50": 240.25410000002012,
+        "p95": 292.93820000000414,
+        "p99": 304.6808000000019,
+        "max": 308.02249999999185,
+        "mean": 245.92948699999891
+      }
+    },
+    {
+      "label": "varias palabras",
+      "q": "amor tiempo caballero",
+      "page": 1,
+      "concurrency": 5,
+      "total": 1416,
+      "summary": {
+        "count": 100,
+        "min": 322.32829999999376,
+        "p50": 364.68249999999534,
+        "p95": 430.54099999999744,
+        "p99": 443.4824999999837,
+        "max": 443.91320000000997,
+        "mean": 369.7295880000011
+      }
+    },
+    {
+      "label": "sin resultados",
+      "q": "xyzzyplugh",
+      "page": 1,
+      "concurrency": 5,
+      "total": 0,
+      "summary": {
+        "count": 100,
+        "min": 8.730799999990268,
+        "p50": 12.096099999995204,
+        "p95": 15.567500000004657,
+        "p99": 16.580900000000838,
+        "max": 18.919699999998556,
+        "mean": 12.294178999997094
+      }
+    },
+    {
+      "label": "pagina profunda (20)",
+      "q": "caballero",
+      "page": 20,
+      "concurrency": 5,
+      "total": 2288,
+      "summary": {
+        "count": 100,
+        "min": 235.02859999999055,
+        "p50": 277.43029999997816,
+        "p95": 305.98399999999674,
+        "p99": 315.35070000000997,
+        "max": 316.6631000000052,
+        "mean": 277.98039299999976
+      }
+    }
+  ]
+}

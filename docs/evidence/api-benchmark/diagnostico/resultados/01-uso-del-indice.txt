@@ -1,0 +1,124 @@
+﻿Pager usage is off.
+### estadisticas
+      relname      | reltuples | relpages 
+-------------------+-----------+----------
+ documents         |      5000 |      188
+ document_contents |      4960 |       71
+(2 rows)
+
+ last_analyze |       last_autoanalyze       | n_live_tup 
+--------------+------------------------------+------------
+              | 2026-09-30 02:36:10.19143+00 |       5000
+(1 row)
+
+                 Table "public.document_contents"
+        Column        |   Type   | Collation | Nullable | Default 
+----------------------+----------+-----------+----------+---------
+ document_id          | uuid     |           | not null | 
+ content              | text     |           | not null | 
+ total_chars          | integer  |           | not null | 
+ indexed_chars        | integer  |           | not null | 
+ is_partially_indexed | boolean  |           | not null | 
+ search_vector        | tsvector |           | not null | 
+Indexes:
+    "document_contents_pkey" PRIMARY KEY, btree (document_id)
+    "document_contents_search_vector_idx" gin (search_vector)
+Foreign-key constraints:
+    "document_contents_document_id_documents_id_fk" FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
+
+SET
+### enable_seqscan=off: sin resultados
+                                                   QUERY PLAN                                                   
+----------------------------------------------------------------------------------------------------------------
+ Limit (actual rows=0 loops=1)
+   InitPlan 1
+     ->  Result (never executed)
+   InitPlan 2
+     ->  Result (actual rows=1 loops=1)
+   ->  Sort (actual rows=0 loops=1)
+         Sort Key: (ts_rank_cd(c.search_vector, (InitPlan 1).col1)) DESC
+         Sort Method: quicksort  Memory: 25kB
+         ->  WindowAgg (actual rows=0 loops=1)
+               ->  Nested Loop (actual rows=0 loops=1)
+                     ->  Index Scan using document_contents_pkey on document_contents c (actual rows=0 loops=1)
+                           Filter: (search_vector @@ (InitPlan 2).col1)
+                           Rows Removed by Filter: 5000
+                     ->  Index Scan using documents_pkey on documents d (never executed)
+                           Index Cond: (id = c.document_id)
+                           Filter: (status = 'INDEXADO'::text)
+ Planning Time: 2.764 ms
+ Execution Time: 163.290 ms
+(18 rows)
+
+### enable_seqscan=off: palabra rara aldonza
+                                                    QUERY PLAN                                                    
+------------------------------------------------------------------------------------------------------------------
+ Limit (actual rows=10 loops=1)
+   InitPlan 1
+     ->  Result (actual rows=1 loops=1)
+   InitPlan 2
+     ->  Result (actual rows=1 loops=1)
+   ->  Sort (actual rows=10 loops=1)
+         Sort Key: (ts_rank_cd(c.search_vector, (InitPlan 1).col1)) DESC
+         Sort Method: top-N heapsort  Memory: 25kB
+         ->  WindowAgg (actual rows=115 loops=1)
+               ->  Nested Loop (actual rows=115 loops=1)
+                     ->  Index Scan using document_contents_pkey on document_contents c (actual rows=115 loops=1)
+                           Filter: (search_vector @@ (InitPlan 2).col1)
+                           Rows Removed by Filter: 4885
+                     ->  Index Scan using documents_pkey on documents d (actual rows=1 loops=115)
+                           Index Cond: (id = c.document_id)
+                           Filter: (status = 'INDEXADO'::text)
+ Planning Time: 0.303 ms
+ Execution Time: 138.489 ms
+(18 rows)
+
+### enable_seqscan=off: caballero
+                                                    QUERY PLAN                                                     
+-------------------------------------------------------------------------------------------------------------------
+ Limit (actual rows=10 loops=1)
+   InitPlan 1
+     ->  Result (actual rows=1 loops=1)
+   InitPlan 2
+     ->  Result (actual rows=1 loops=1)
+   ->  Sort (actual rows=10 loops=1)
+         Sort Key: (ts_rank_cd(c.search_vector, (InitPlan 1).col1)) DESC
+         Sort Method: top-N heapsort  Memory: 25kB
+         ->  WindowAgg (actual rows=2288 loops=1)
+               ->  Nested Loop (actual rows=2288 loops=1)
+                     ->  Index Scan using document_contents_pkey on document_contents c (actual rows=2288 loops=1)
+                           Filter: (search_vector @@ (InitPlan 2).col1)
+                           Rows Removed by Filter: 2712
+                     ->  Index Scan using documents_pkey on documents d (actual rows=1 loops=2288)
+                           Index Cond: (id = c.document_id)
+                           Filter: (status = 'INDEXADO'::text)
+ Planning Time: 0.461 ms
+ Execution Time: 257.306 ms
+(18 rows)
+
+RESET
+### Costo de evaluar @@ sobre todos los vectores (sin rank), sin resultados, seqscan
+                          QUERY PLAN                          
+--------------------------------------------------------------
+ Aggregate (actual rows=1 loops=1)
+   ->  Seq Scan on document_contents (actual rows=0 loops=1)
+         Filter: (search_vector @@ '''xyzzyplugh'''::tsquery)
+         Rows Removed by Filter: 5000
+ Planning Time: 0.250 ms
+ Execution Time: 101.219 ms
+(6 rows)
+
+### con indice
+SET
+                                          QUERY PLAN                                          
+----------------------------------------------------------------------------------------------
+ Aggregate (actual rows=1 loops=1)
+   ->  Bitmap Heap Scan on document_contents (actual rows=0 loops=1)
+         Recheck Cond: (search_vector @@ '''xyzzyplugh'''::tsquery)
+         ->  Bitmap Index Scan on document_contents_search_vector_idx (actual rows=0 loops=1)
+               Index Cond: (search_vector @@ '''xyzzyplugh'''::tsquery)
+ Planning Time: 0.261 ms
+ Execution Time: 0.299 ms
+(7 rows)
+
+RESET

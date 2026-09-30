@@ -1,0 +1,103 @@
+﻿Timing is on.
+=== sin resultados (execution) ===
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Subquery Scan on p  (cost=195.49..198.14 rows=10 width=56) (actual time=167.899..167.902 rows=0 loops=1)
+   Buffers: shared hit=25627
+   CTE q
+     ->  Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.002..0.003 rows=1 loops=1)
+   InitPlan 2
+     ->  CTE Scan on q q_1  (cost=0.00..0.02 rows=1 width=32) (never executed)
+   ->  Limit  (cost=195.46..195.48 rows=10 width=110) (actual time=167.898..167.899 rows=0 loops=1)
+         Buffers: shared hit=25627
+         ->  Sort  (cost=195.46..195.52 rows=24 width=110) (actual time=167.896..167.897 rows=0 loops=1)
+               Sort Key: (ts_rank_cd(c.search_vector, q.tsq)) DESC, d.created_at DESC, d.id
+               Sort Method: quicksort  Memory: 25kB
+               Buffers: shared hit=25627
+               ->  WindowAgg  (cost=186.77..194.94 rows=24 width=110) (actual time=167.827..167.829 rows=0 loops=1)
+                     Buffers: shared hit=25618
+                     ->  Nested Loop  (cost=0.28..194.58 rows=24 width=116) (actual time=167.825..167.826 rows=0 loops=1)
+                           Buffers: shared hit=25618
+                           ->  Nested Loop  (cost=0.00..182.62 rows=25 width=108) (actual time=167.824..167.824 rows=0 loops=1)
+                                 Join Filter: (c.search_vector @@ q.tsq)
+                                 Rows Removed by Join Filter: 5000
+                                 Buffers: shared hit=25618
+                                 ->  CTE Scan on q  (cost=0.00..0.02 rows=1 width=32) (actual time=0.005..0.006 rows=1 loops=1)
+                                 ->  Seq Scan on document_contents c  (cost=0.00..120.60 rows=4960 width=76) (actual time=0.014..1.330 rows=5000 loops=1)
+                                       Buffers: shared hit=71
+                           ->  Index Scan using documents_pkey on documents d  (cost=0.28..0.48 rows=1 width=24) (never executed)
+                                 Index Cond: (id = c.document_id)
+                                 Filter: (status = 'INDEXADO'::text)
+ Planning:
+   Buffers: shared hit=420
+ Planning Time: 4.743 ms
+ Execution Time: 168.113 ms
+(30 rows)
+
+Time: 176.117 ms
+=== palabra frecuente caballero ===
+                                                                          QUERY PLAN                                                                          
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Subquery Scan on p  (cost=195.49..198.14 rows=10 width=56) (actual time=277.693..652.718 rows=10 loops=1)
+   Buffers: shared hit=47025
+   CTE q
+     ->  Result  (cost=0.00..0.01 rows=1 width=32) (actual time=0.001..0.001 rows=1 loops=1)
+   InitPlan 2
+     ->  CTE Scan on q q_1  (cost=0.00..0.02 rows=1 width=32) (actual time=0.002..0.003 rows=1 loops=1)
+   ->  Limit  (cost=195.46..195.48 rows=10 width=110) (actual time=233.818..233.851 rows=10 loops=1)
+         Buffers: shared hit=46793
+         ->  Sort  (cost=195.46..195.52 rows=24 width=110) (actual time=233.815..233.835 rows=10 loops=1)
+               Sort Key: (ts_rank_cd(c.search_vector, q.tsq)) DESC, d.created_at DESC, d.id
+               Sort Method: top-N heapsort  Memory: 27kB
+               Buffers: shared hit=46793
+               ->  WindowAgg  (cost=186.77..194.94 rows=24 width=110) (actual time=120.568..232.536 rows=2288 loops=1)
+                     Buffers: shared hit=46793
+                     ->  Nested Loop  (cost=0.28..194.58 rows=24 width=116) (actual time=0.052..119.322 rows=2288 loops=1)
+                           Buffers: shared hit=32487
+                           ->  Nested Loop  (cost=0.00..182.62 rows=25 width=108) (actual time=0.040..112.075 rows=2288 loops=1)
+                                 Join Filter: (c.search_vector @@ q.tsq)
+                                 Rows Removed by Join Filter: 2712
+                                 Buffers: shared hit=25595
+                                 ->  CTE Scan on q  (cost=0.00..0.02 rows=1 width=32) (actual time=0.002..0.004 rows=1 loops=1)
+                                 ->  Seq Scan on document_contents c  (cost=0.00..120.60 rows=4960 width=76) (actual time=0.005..0.962 rows=5000 loops=1)
+                                       Buffers: shared hit=71
+                           ->  Index Scan using documents_pkey on documents d  (cost=0.28..0.48 rows=1 width=24) (actual time=0.002..0.002 rows=1 loops=2288)
+                                 Index Cond: (id = c.document_id)
+                                 Filter: (status = 'INDEXADO'::text)
+                                 Buffers: shared hit=6878
+ Planning:
+   Buffers: shared hit=15
+ Planning Time: 0.333 ms
+ Execution Time: 652.986 ms
+(31 rows)
+
+Time: 654.031 ms
+=== tamanos ===
+ docs | vectores | contenido | avg_chars | max_chars 
+------+----------+-----------+-----------+-----------
+ 5000 | 87 MB    | 117 MB    |     41523 |    295180
+(1 row)
+
+Time: 2.640 ms
+               relname                |    size    
+--------------------------------------+------------
+ documents                            | 1512 kB
+ document_contents                    | 568 kB
+ document_contents_search_vector_idx  | 15 MB
+ pg_replication_origin_roiident_index | 8192 bytes
+ pg_replication_origin_roname_index   | 8192 bytes
+ pg_replication_origin_status         | 0 bytes
+ pg_replication_origin                | 0 bytes
+(7 rows)
+
+Time: 4.677 ms
+              name               | setting | unit 
+---------------------------------+---------+------
+ effective_cache_size            | 524288  | 8kB
+ jit                             | on      | 
+ max_parallel_workers_per_gather | 2       | 
+ shared_buffers                  | 16384   | 8kB
+ work_mem                        | 4096    | kB
+(5 rows)
+
+Time: 3.159 ms

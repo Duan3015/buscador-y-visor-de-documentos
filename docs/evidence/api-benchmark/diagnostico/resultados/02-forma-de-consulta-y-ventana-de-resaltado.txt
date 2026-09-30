@@ -1,0 +1,27 @@
+﻿Pager usage is off.
+Timing is on.
+### C1 CTE materializada sin SET (plan por defecto): sin resultados x3
+Time: 142.458 ms
+Time: 117.293 ms
+Time: 110.840 ms
+### C2 CTE materializada con enable_seqscan off local: sin resultados x3
+Time: 0.246 ms
+Time: 0.143 ms
+Time: 0.778 ms
+Time: 1.005 ms
+Time: 0.961 ms
+Time: 0.206 ms
+### D consulta completa con CTE materializada + seqscan off, caballero, headline completo x3
+Time: 0.124 ms
+Time: 0.086 ms
+Time: 456.630 ms
+Time: 446.902 ms
+Time: 453.839 ms
+Time: 0.320 ms
+### E igual que D pero headline limitado a 100000 caracteres x3
+Time: 0.124 ms
+Time: 0.187 ms
+Time: 251.064 ms
+Time: 250.426 ms
+Time: 277.253 ms
+Time: 0.155 ms
